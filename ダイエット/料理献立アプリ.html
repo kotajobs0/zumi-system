@@ -1,0 +1,1927 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>料理献立アプリ</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#1d976c">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="献立アプリ">
+  <link rel="icon" href="icon.svg">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', 'Hiragino Sans', 'Yu Gothic UI', sans-serif;
+      background: linear-gradient(135deg, #1d976c 0%, #93f9b9 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 20px;
+      padding: 36px 32px;
+      width: 100%;
+      max-width: 640px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+    }
+
+    h1 { text-align: center; font-size: 1.5rem; color: #155d46; margin-bottom: 4px; }
+    .subtitle { text-align: center; color: #888; font-size: 0.82rem; margin-bottom: 20px; }
+
+    .date-bar {
+      text-align: center;
+      font-size: 0.85rem;
+      color: #555;
+      margin-bottom: 20px;
+      padding: 8px 14px;
+      background: #f0fdf4;
+      border-radius: 10px;
+      font-weight: 600;
+    }
+
+    /* stats */
+    .stats-row { display: flex; gap: 10px; margin-bottom: 20px; }
+    .stat-box {
+      flex: 1;
+      background: #f0fdf4;
+      border-radius: 12px;
+      padding: 12px;
+      text-align: center;
+    }
+    .stat-box .s-label { font-size: 0.72rem; color: #999; margin-bottom: 4px; }
+    .stat-box .s-value { font-size: 1.4rem; font-weight: 800; color: #155d46; }
+    .stat-box .s-unit  { font-size: 0.7rem; color: #bbb; }
+
+    /* tabs – 4-column */
+    .tabs { display: flex; gap: 5px; margin-bottom: 22px; flex-wrap: nowrap; }
+    .tab-btn {
+      flex: 1;
+      padding: 9px 2px;
+      border: 2px solid #e0e0e0;
+      border-radius: 12px;
+      background: #f8f8f8;
+      font-size: 0.75rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all .2s;
+      color: #888;
+      line-height: 1.3;
+      text-align: center;
+    }
+    .tab-btn.active-week { border-color: #1d976c; background: #f0fdf4; color: #155d46; }
+    .tab-btn.active-ai   { border-color: #8b5cf6; background: #f5f3ff; color: #6d28d9; }
+    .tab-btn.active-shop { border-color: #f59e0b; background: #fffbeb; color: #b45309; }
+    .tab-btn.active-cal  { border-color: #6366f1; background: #eef2ff; color: #4338ca; }
+
+    /* week nav */
+    .week-nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+      gap: 8px;
+    }
+    .week-nav-btn {
+      background: #f0fdf4;
+      border: 2px solid #bbf7d0;
+      border-radius: 8px;
+      padding: 8px 12px;
+      cursor: pointer;
+      font-size: 0.82rem;
+      color: #155d46;
+      font-weight: 700;
+      transition: all .15s;
+      white-space: nowrap;
+    }
+    .week-nav-btn:hover { border-color: #1d976c; background: #dcfce7; }
+    .week-center { display: flex; flex-direction: column; align-items: center; gap: 5px; flex: 1; }
+    .week-title { font-size: 0.95rem; font-weight: 700; color: #155d46; }
+    .week-today-btn {
+      font-size: 0.72rem;
+      padding: 3px 10px;
+      background: #1d976c;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 700;
+      transition: background .15s;
+    }
+    .week-today-btn:hover { background: #155d46; }
+
+    /* meal grid */
+    .meal-grid-wrap {
+      overflow-x: auto;
+      margin-bottom: 10px;
+      border-radius: 12px;
+      border: 1.5px solid #d1fae5;
+    }
+    .meal-grid {
+      min-width: 580px;
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .meal-grid th {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: #555;
+      padding: 8px 4px;
+      text-align: center;
+      background: #f0fdf4;
+      border-bottom: 1.5px solid #d1fae5;
+      line-height: 1.4;
+    }
+    .meal-grid th.today-col { background: #d1fae5; color: #155d46; }
+    .meal-grid th:first-child { width: 38px; }
+    .meal-grid td.row-label {
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: #9ca3af;
+      text-align: center;
+      padding: 0 3px;
+      background: #fafafa;
+      border-right: 1.5px solid #e5e7eb;
+      line-height: 1.5;
+      white-space: nowrap;
+    }
+    .meal-grid td.meal-cell {
+      padding: 4px;
+      border: 1px solid #f0f0f0;
+      text-align: center;
+      cursor: pointer;
+      vertical-align: middle;
+      transition: background .15s;
+    }
+    .meal-grid td.meal-cell:hover { background: #f0fdf4; }
+    .meal-grid td.meal-cell.today-col { background: #f0fdf4; }
+    .meal-inner {
+      min-height: 52px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      padding: 4px 2px;
+    }
+    .meal-empty { font-size: 1.1rem; color: #d1d5db; }
+    .meal-name {
+      font-size: 0.68rem;
+      font-weight: 600;
+      color: #374151;
+      line-height: 1.3;
+      word-break: break-all;
+    }
+    .meal-cal { font-size: 0.63rem; color: #34d399; font-weight: 700; }
+    .meal-badge {
+      font-size: 0.58rem;
+      font-weight: 800;
+      padding: 1px 4px;
+      border-radius: 4px;
+      margin-top: 1px;
+    }
+    .badge-jp   { background: #fef3c7; color: #92400e; }
+    .badge-west { background: #dbeafe; color: #1e40af; }
+    .badge-cn   { background: #fee2e2; color: #991b1b; }
+
+    /* calorie totals row */
+    .meal-grid tr.cal-row td {
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-align: center;
+      padding: 6px 4px;
+      background: #f9fafb;
+      border-top: 2px solid #d1fae5;
+      color: #155d46;
+    }
+    .meal-grid tr.cal-row td.today-col { background: #ecfdf5; }
+    .meal-grid tr.cal-row td.row-label { color: #9ca3af; font-weight: 600; }
+    .cal-num {
+      display: inline-block;
+      padding: 1px 5px;
+      border-radius: 6px;
+      background: #d1fae5;
+      color: #065f46;
+      font-size: 0.66rem;
+    }
+    .cal-num.warn { background: #fef3c7; color: #92400e; }
+    .cal-num.over { background: #fee2e2; color: #991b1b; }
+
+    .grid-hint {
+      font-size: 0.73rem;
+      color: #9ca3af;
+      text-align: center;
+      margin-bottom: 16px;
+    }
+
+    /* edit mode */
+    .edit-mode-btn {
+      font-size: 0.75rem;
+      padding: 4px 10px;
+      background: #fff;
+      border: 2px solid #e5e7eb;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 700;
+      color: #6b7280;
+      transition: all .15s;
+      font-family: inherit;
+    }
+    .edit-mode-btn:hover { border-color: #ef4444; color: #ef4444; }
+    .edit-mode-btn.active { border-color: #ef4444; background: #fee2e2; color: #ef4444; }
+
+    .edit-bar {
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      background: #fef3c7;
+      border: 1.5px solid #fde68a;
+      border-radius: 10px;
+      padding: 10px 14px;
+      margin-bottom: 10px;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .edit-bar.active { display: flex; }
+    .edit-bar-info { font-size: 0.82rem; font-weight: 700; color: #92400e; }
+    .edit-bar-btns { display: flex; gap: 6px; }
+    .edit-bar-btn {
+      padding: 6px 12px;
+      border-radius: 8px;
+      border: 2px solid;
+      font-size: 0.78rem;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all .15s;
+      background: #fff;
+    }
+    .ebd-del    { border-color: #ef4444; color: #ef4444; }
+    .ebd-del:hover { background: #fee2e2; }
+    .ebd-all    { border-color: #d97706; color: #92400e; }
+    .ebd-all:hover { background: #fef3c7; }
+    .ebd-cancel { border-color: #d1d5db; color: #6b7280; }
+    .ebd-cancel:hover { background: #f3f4f6; }
+
+    .meal-cell { position: relative; }
+    .meal-cell.edit-selectable { cursor: default; }
+    .meal-cell.edit-selectable:hover { background: #fffbeb !important; }
+    .meal-cell.edit-selected { background: #fef3c7 !important; outline: 2.5px solid #f59e0b; outline-offset: -2px; }
+    .cell-chk {
+      position: absolute; top: 3px; right: 3px;
+      width: 17px; height: 17px;
+      border-radius: 50%;
+      border: 2px solid #d1d5db;
+      background: #fff;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.62rem; font-weight: 800; color: transparent;
+      transition: all .15s;
+    }
+    .meal-cell.edit-selected .cell-chk { border-color: #f59e0b; background: #f59e0b; color: #fff; }
+
+    /* ── AI TAB ── */
+    .ai-desc {
+      text-align: center;
+      color: #9ca3af;
+      font-size: 0.82rem;
+      margin-bottom: 22px;
+      line-height: 1.6;
+    }
+    .sec-label {
+      font-size: 0.73rem;
+      font-weight: 700;
+      color: #9ca3af;
+      margin-bottom: 9px;
+      letter-spacing: 0.03em;
+    }
+    .sec-label small { font-weight: 400; font-size: 0.68rem; }
+
+    /* cuisine buttons */
+    .cuisine-btns { display: flex; gap: 8px; margin-bottom: 20px; }
+    .cuisine-btn {
+      flex: 1;
+      padding: 14px 6px;
+      border: 2.5px solid #e5e7eb;
+      border-radius: 14px;
+      background: #fafafa;
+      font-size: 1.4rem;
+      cursor: pointer;
+      transition: all .2s;
+      text-align: center;
+      font-family: inherit;
+      line-height: 1;
+    }
+    .cuisine-btn .c-name {
+      display: block;
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: #9ca3af;
+      margin-top: 6px;
+    }
+    .cuisine-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+    .cuisine-btn.active-jp   { border-color: #f59e0b; background: #fffbeb; box-shadow: 0 0 0 3px #fde68a44; }
+    .cuisine-btn.active-jp   .c-name { color: #b45309; }
+    .cuisine-btn.active-west { border-color: #6366f1; background: #eef2ff; box-shadow: 0 0 0 3px #a5b4fc44; }
+    .cuisine-btn.active-west .c-name { color: #4338ca; }
+    .cuisine-btn.active-cn   { border-color: #ef4444; background: #fef2f2; box-shadow: 0 0 0 3px #fca5a544; }
+    .cuisine-btn.active-cn   .c-name { color: #b91c1c; }
+
+    /* meal type + fill mode rows */
+    .toggle-row { display: flex; gap: 8px; margin-bottom: 20px; }
+    .toggle-btn {
+      flex: 1;
+      padding: 10px 4px;
+      border: 2px solid #e5e7eb;
+      border-radius: 10px;
+      background: #fafafa;
+      font-size: 0.78rem;
+      font-weight: 700;
+      cursor: pointer;
+      color: #9ca3af;
+      transition: all .2s;
+      font-family: inherit;
+    }
+    .toggle-btn:hover { border-color: #d1d5db; }
+    .toggle-btn.on-green  { border-color: #1d976c; background: #f0fdf4; color: #155d46; }
+    .toggle-btn.on-purple { border-color: #8b5cf6; background: #f5f3ff; color: #6d28d9; }
+
+    /* generate button */
+    .generate-btn {
+      display: block;
+      width: 100%;
+      padding: 15px;
+      background: linear-gradient(135deg, #7c3aed, #8b5cf6);
+      color: #fff;
+      border: none;
+      border-radius: 14px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      margin-bottom: 22px;
+      transition: opacity .2s, transform .15s;
+      font-family: inherit;
+      letter-spacing: 0.03em;
+      box-shadow: 0 6px 20px rgba(124,58,237,0.3);
+    }
+    .generate-btn:hover { opacity: .92; transform: translateY(-1px); }
+    .generate-btn:active { transform: translateY(0); }
+
+    /* preview section */
+    .preview-section { animation: fadeSlide .3s ease; }
+    @keyframes fadeSlide {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .preview-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .preview-title { font-size: 0.82rem; font-weight: 700; color: #374151; }
+    .regen-btn {
+      font-size: 0.75rem;
+      padding: 5px 12px;
+      border: 2px solid #d1d5db;
+      border-radius: 8px;
+      background: #f9fafb;
+      cursor: pointer;
+      color: #6b7280;
+      font-family: inherit;
+      font-weight: 600;
+      transition: all .15s;
+    }
+    .regen-btn:hover { border-color: #8b5cf6; color: #6d28d9; }
+
+    .preview-wrap {
+      overflow-x: auto;
+      border-radius: 12px;
+      border: 1.5px solid #e9d5ff;
+      margin-bottom: 14px;
+    }
+    .preview-table {
+      min-width: 540px;
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .preview-table th {
+      font-size: 0.73rem;
+      font-weight: 700;
+      color: #555;
+      padding: 7px 4px;
+      text-align: center;
+      background: #f5f3ff;
+      border-bottom: 1.5px solid #e9d5ff;
+      line-height: 1.4;
+    }
+    .preview-table th.today-col { background: #ede9fe; color: #6d28d9; }
+    .preview-table th:first-child { width: 36px; }
+    .preview-table td.row-label {
+      font-size: 0.68rem;
+      font-weight: 700;
+      color: #9ca3af;
+      text-align: center;
+      padding: 0 3px;
+      background: #fafafa;
+      border-right: 1.5px solid #e5e7eb;
+      white-space: nowrap;
+      line-height: 1.5;
+    }
+    .preview-cell {
+      padding: 4px;
+      border: 1px solid #f0f0f0;
+      text-align: center;
+      vertical-align: middle;
+      font-size: 0.7rem;
+      color: #9ca3af;
+    }
+    .preview-cell.today-col { background: #f5f3ff; }
+    .preview-inner {
+      min-height: 50px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
+      padding: 3px 2px;
+    }
+    .preview-name { font-size: 0.67rem; font-weight: 600; color: #374151; line-height: 1.3; word-break: break-all; }
+    .preview-cal  { font-size: 0.61rem; color: #a78bfa; font-weight: 700; }
+    .preview-badge {
+      font-size: 0.59rem;
+      font-weight: 800;
+      padding: 1px 5px;
+      border-radius: 4px;
+      margin-top: 1px;
+    }
+    .pbadge-jp       { background: #fef3c7; color: #92400e; }
+    .pbadge-west     { background: #dbeafe; color: #1e40af; }
+    .pbadge-cn       { background: #fee2e2; color: #991b1b; }
+    .pbadge-existing { background: #f3f4f6; color: #9ca3af; }
+
+    .apply-btn {
+      display: block;
+      width: 100%;
+      padding: 13px;
+      background: #1d976c;
+      color: #fff;
+      border: none;
+      border-radius: 14px;
+      font-size: 0.92rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background .2s;
+      font-family: inherit;
+      box-shadow: 0 4px 14px rgba(29,151,108,0.3);
+    }
+    .apply-btn:hover { background: #155d46; }
+
+    /* ── SHOPPING LIST ── */
+    .shop-add-row { display: flex; gap: 8px; margin-bottom: 16px; }
+    .shop-add-row select, .shop-add-row input {
+      border: 2px solid #e5e7eb;
+      border-radius: 10px;
+      padding: 8px 10px;
+      font-size: 0.85rem;
+      outline: none;
+      transition: border-color .2s;
+      font-family: inherit;
+    }
+    .shop-add-row select { flex: 0 0 96px; background: #fafafa; }
+    .shop-add-row input  { flex: 1; }
+    .shop-add-row input:focus, .shop-add-row select:focus { border-color: #1d976c; }
+    .shop-add-btn {
+      flex: 0 0 44px;
+      background: #1d976c;
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-size: 1.3rem;
+      cursor: pointer;
+      transition: background .2s;
+    }
+    .shop-add-btn:hover { background: #155d46; }
+
+    .shop-group { margin-bottom: 16px; }
+    .shop-cat-label {
+      font-size: 0.73rem;
+      font-weight: 700;
+      color: #9ca3af;
+      margin-bottom: 6px;
+      padding-bottom: 4px;
+      border-bottom: 1.5px solid #f0f0f0;
+    }
+    .shop-items { display: flex; flex-direction: column; gap: 6px; }
+    .shop-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1.5px solid #e5e7eb;
+      background: #fafafa;
+      transition: all .2s;
+      cursor: pointer;
+      user-select: none;
+    }
+    .shop-item:hover { border-color: #bbf7d0; }
+    .shop-item.checked { opacity: .55; background: #f0fdf4; border-color: #a7f3d0; }
+    .shop-check {
+      width: 22px; height: 22px;
+      border-radius: 50%;
+      border: 2.5px solid #ccc;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.78rem;
+      transition: all .2s;
+    }
+    .shop-item.checked .shop-check { border-color: #1d976c; background: #1d976c; color: #fff; }
+    .shop-item-name { flex: 1; font-size: 0.9rem; font-weight: 600; color: #333; }
+    .shop-item.checked .shop-item-name { text-decoration: line-through; color: #9ca3af; }
+    .shop-del {
+      font-size: 0.72rem;
+      color: #d1d5db;
+      cursor: pointer;
+      padding: 3px 7px;
+      border-radius: 5px;
+      transition: all .15s;
+    }
+    .shop-del:hover { background: #fee2e2; color: #ef4444; }
+
+    .shop-actions { display: flex; gap: 8px; margin-top: 4px; }
+    .shop-action-btn {
+      flex: 1;
+      padding: 9px;
+      border: 2px solid #ddd;
+      border-radius: 10px;
+      background: transparent;
+      color: #888;
+      font-size: 0.82rem;
+      cursor: pointer;
+      transition: all .2s;
+      font-family: inherit;
+    }
+    .shop-action-btn:hover { border-color: #aaa; color: #555; }
+
+    .shop-empty { text-align: center; color: #ccc; font-size: 0.85rem; padding: 32px 0; }
+
+    /* ── CALENDAR ── */
+    .cal-nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+    .cal-nav button {
+      background: #f0fdf4;
+      border: 2px solid #d1fae5;
+      border-radius: 8px;
+      padding: 6px 12px;
+      cursor: pointer;
+      font-size: 1rem;
+      color: #155d46;
+      transition: all .15s;
+    }
+    .cal-nav button:hover { border-color: #1d976c; }
+    .cal-title { font-size: 1rem; font-weight: 700; color: #155d46; }
+
+    .cal-legend {
+      display: flex;
+      gap: 14px;
+      justify-content: center;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+    .legend-item { display: flex; align-items: center; gap: 5px; font-size: 0.73rem; color: #555; }
+    .legend-dot { width: 10px; height: 10px; border-radius: 50%; }
+
+    .cal-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 4px;
+      margin-bottom: 16px;
+    }
+    .cal-header-cell {
+      text-align: center;
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: #aaa;
+      padding: 4px 0;
+    }
+    .cal-header-cell:first-child { color: #ef4444; }
+    .cal-header-cell:last-child  { color: #3b82f6; }
+
+    .cal-cell {
+      border-radius: 8px;
+      padding: 4px 2px;
+      min-height: 52px;
+      background: #f9fafb;
+      border: 1.5px solid #eee;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+    }
+    .cal-cell.empty { background: transparent; border-color: transparent; }
+    .cal-cell.today { border-color: #1d976c; border-width: 2px; background: #f0fdf4; }
+
+    .cal-day-num { font-size: 0.78rem; font-weight: 700; color: #555; line-height: 1; }
+    .cal-cell.today .cal-day-num { color: #155d46; }
+
+    .cal-dots { display: flex; gap: 3px; justify-content: center; flex-wrap: wrap; margin-top: 2px; }
+    .meal-dot { width: 9px; height: 9px; border-radius: 50%; }
+    .dot-b { background: #fbbf24; }
+    .dot-l { background: #34d399; }
+    .dot-d { background: #818cf8; }
+    .dot-e { background: #e5e7eb; }
+
+    .cal-summary {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 10px;
+    }
+    .cal-sum-box { background: #f0fdf4; border-radius: 12px; padding: 12px; text-align: center; }
+    .cal-sum-box .cs-label { font-size: 0.68rem; color: #999; margin-bottom: 4px; }
+    .cs-ring { font-size: 1.3rem; font-weight: 800; color: #155d46; }
+    .cs-sub  { font-size: 0.65rem; color: #bbb; }
+
+    /* ── MODAL ── */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal-box {
+      background: #fff;
+      border-radius: 20px;
+      padding: 26px 22px;
+      width: 100%;
+      max-width: 380px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      animation: popIn .25s cubic-bezier(.4,0,.2,1);
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+    @keyframes popIn {
+      from { transform: scale(.9) translateY(8px); opacity: 0; }
+      to   { transform: scale(1)  translateY(0);   opacity: 1; }
+    }
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+    .modal-title { font-size: 0.95rem; font-weight: 700; color: #155d46; }
+    .modal-close {
+      background: #f3f4f6;
+      border: none;
+      border-radius: 8px;
+      padding: 4px 10px;
+      cursor: pointer;
+      font-size: 1rem;
+      color: #888;
+    }
+    .modal-close:hover { background: #e5e7eb; }
+
+    .modal-sec { font-size: 0.73rem; font-weight: 700; color: #9ca3af; margin-bottom: 8px; }
+    .presets-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 5px;
+      margin-bottom: 16px;
+    }
+    .preset-btn {
+      padding: 8px 8px;
+      border: 2px solid #e5e7eb;
+      border-radius: 10px;
+      background: #fafafa;
+      font-size: 0.73rem;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: left;
+      transition: all .15s;
+      color: #374151;
+      font-family: inherit;
+    }
+    .preset-btn:hover { border-color: #1d976c; background: #f0fdf4; }
+    .preset-btn.selected { border-color: #1d976c; background: #d1fae5; color: #065f46; }
+    .p-name { display: block; line-height: 1.35; }
+    .p-cal  { display: block; font-size: 0.65rem; color: #9ca3af; margin-top: 2px; }
+    .preset-btn.selected .p-cal { color: #34d399; }
+
+    .modal-input {
+      width: 100%;
+      border: 2px solid #e5e7eb;
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-size: 0.88rem;
+      outline: none;
+      margin-bottom: 10px;
+      transition: border-color .2s;
+      font-family: inherit;
+    }
+    .modal-input:focus { border-color: #1d976c; }
+
+    .modal-cal-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 18px;
+    }
+    .modal-cal-row label { font-size: 0.82rem; font-weight: 600; color: #555; white-space: nowrap; }
+    .modal-cal-input {
+      flex: 1;
+      border: 2px solid #e5e7eb;
+      border-radius: 10px;
+      padding: 8px 12px;
+      font-size: 0.88rem;
+      outline: none;
+      transition: border-color .2s;
+      font-family: inherit;
+    }
+    .modal-cal-input:focus { border-color: #1d976c; }
+    .modal-cal-row span { font-size: 0.82rem; color: #9ca3af; }
+
+    .modal-btns { display: flex; gap: 8px; }
+    .modal-save {
+      flex: 1;
+      padding: 11px;
+      background: #1d976c;
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background .2s;
+      font-family: inherit;
+    }
+    .modal-save:hover { background: #155d46; }
+    .modal-clear {
+      padding: 11px 14px;
+      background: transparent;
+      color: #ef4444;
+      border: 2px solid #fca5a5;
+      border-radius: 12px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all .2s;
+      font-family: inherit;
+    }
+    .modal-clear:hover { background: #fee2e2; border-color: #ef4444; }
+
+    /* AI calorie estimate button */
+    .ai-cal-btn {
+      flex: 0 0 auto;
+      padding: 8px 10px;
+      background: linear-gradient(135deg, #7c3aed, #8b5cf6);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.78rem;
+      font-weight: 700;
+      transition: opacity .2s;
+      font-family: inherit;
+      white-space: nowrap;
+    }
+    .ai-cal-btn:hover { opacity: .85; }
+    .ai-cal-btn:disabled { opacity: .5; cursor: not-allowed; }
+
+    /* API key section */
+    .apikey-section {
+      background: #f5f3ff;
+      border: 1.5px solid #e9d5ff;
+      border-radius: 12px;
+      padding: 14px;
+      margin-bottom: 20px;
+    }
+    .apikey-row { display: flex; gap: 8px; align-items: center; }
+    .apikey-input {
+      flex: 1;
+      border: 2px solid #e5e7eb;
+      border-radius: 10px;
+      padding: 8px 10px;
+      font-size: 0.82rem;
+      outline: none;
+      font-family: monospace;
+      transition: border-color .2s;
+    }
+    .apikey-input:focus { border-color: #8b5cf6; }
+    .apikey-save-btn {
+      padding: 8px 14px;
+      background: #8b5cf6;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.82rem;
+      font-weight: 700;
+      font-family: inherit;
+      transition: background .2s;
+    }
+    .apikey-save-btn:hover { background: #7c3aed; }
+    .apikey-status { font-size: 0.72rem; color: #9ca3af; margin-top: 6px; }
+    .apikey-status.set { color: #059669; }
+  </style>
+</head>
+<body>
+
+<!-- MEAL MODAL -->
+<div class="modal-overlay" id="modalOverlay" onclick="overlayClick(event)">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div class="modal-title" id="modalTitle">献立を入力</div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-sec">クイック選択</div>
+    <div class="presets-grid" id="presetsGrid"></div>
+    <div class="modal-sec">料理名</div>
+    <input type="text" class="modal-input" id="mealNameInput" placeholder="例：鮭の塩焼き定食" maxlength="30"
+      onkeydown="if(event.key==='Enter')saveMeal()">
+    <div class="modal-cal-row">
+      <label>カロリー</label>
+      <input type="number" class="modal-cal-input" id="mealCalInput" placeholder="省略可" min="0" max="5000"
+        onkeydown="if(event.key==='Enter')saveMeal()">
+      <span>kcal</span>
+      <button class="ai-cal-btn" id="aiCalBtn" onclick="estimateCalorie()">✨ AI推定</button>
+    </div>
+    <div id="aiCalNote" style="display:none; font-size:0.72rem; color:#6d28d9; background:#f5f3ff; border-radius:8px; padding:8px 10px; margin-bottom:14px; line-height:1.6;"></div>
+    <div class="modal-btns">
+      <button class="modal-save" onclick="saveMeal()">保存する</button>
+      <button class="modal-clear" onclick="clearMeal()">削除</button>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <h1>🍱 料理献立アプリ</h1>
+  <p class="subtitle">毎日の食事を記録して健康的な食生活を</p>
+
+  <div class="date-bar" id="dateBar"></div>
+
+  <div class="stats-row">
+    <div class="stat-box">
+      <div class="s-label">今週の平均カロリー</div>
+      <div class="s-value" id="avgCal">–</div>
+      <div class="s-unit">kcal / 日</div>
+    </div>
+    <div class="stat-box">
+      <div class="s-label">今週の献立入力率</div>
+      <div class="s-value" id="inputRate">0%</div>
+      <div class="s-unit">（朝・昼・夜 × 7日）</div>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab-btn active-week" id="tab-week"     onclick="switchTab('week')">📅 週間献立</button>
+    <button class="tab-btn"            id="tab-ai"        onclick="switchTab('ai')">🤖 AIおすすめ</button>
+    <button class="tab-btn"            id="tab-shopping"  onclick="switchTab('shopping')">🛒 買い物リスト</button>
+    <button class="tab-btn"            id="tab-calendar"  onclick="switchTab('calendar')">📊 カレンダー</button>
+  </div>
+
+  <!-- WEEK PANEL -->
+  <div id="panel-week">
+    <div class="week-nav">
+      <button class="week-nav-btn" onclick="weekMove(-1)">◀ 前週</button>
+      <div class="week-center">
+        <span class="week-title" id="weekTitle"></span>
+        <button class="week-today-btn" onclick="weekToday()">今週に戻る</button>
+      </div>
+      <button class="week-nav-btn" onclick="weekMove(+1)">次週 ▶</button>
+      <button class="edit-mode-btn" id="editModeBtn" onclick="toggleEditMode()">☑️ 選択</button>
+    </div>
+    <div class="edit-bar" id="editBar">
+      <span class="edit-bar-info" id="editBarInfo">0件選択中</span>
+      <div class="edit-bar-btns">
+        <button class="edit-bar-btn ebd-all"    onclick="selectAllMeals()">全選択</button>
+        <button class="edit-bar-btn ebd-del"    onclick="deleteSelected()">🗑 削除</button>
+        <button class="edit-bar-btn ebd-cancel" onclick="toggleEditMode()">キャンセル</button>
+      </div>
+    </div>
+    <div class="meal-grid-wrap">
+      <table class="meal-grid" id="mealGrid"></table>
+    </div>
+    <div class="grid-hint">セルをタップして献立を入力 · 黄＝カロリー不足 · 赤＝過多</div>
+  </div>
+
+  <!-- AI PANEL -->
+  <div id="panel-ai" style="display:none">
+    <div class="apikey-section">
+      <div class="sec-label" style="margin-bottom:10px">🔑 Claude API キー <small>（カロリーAI推定に使用）</small></div>
+      <div class="apikey-row">
+        <input type="password" class="apikey-input" id="apiKeyInput" placeholder="sk-ant-..." maxlength="200">
+        <button class="apikey-save-btn" onclick="saveApiKey()">保存</button>
+      </div>
+      <div class="apikey-status" id="apiKeyStatus">未設定</div>
+    </div>
+    <p class="ai-desc">料理のジャンルを選ぶと、AIが今週の献立を自動で提案します</p>
+
+    <div class="sec-label">料理ジャンル <small>（複数選択可）</small></div>
+    <div class="cuisine-btns">
+      <button class="cuisine-btn active-jp" id="cbtn-jp" onclick="toggleCuisine('jp')">
+        🍱<span class="c-name">和食</span>
+      </button>
+      <button class="cuisine-btn" id="cbtn-west" onclick="toggleCuisine('west')">
+        🍝<span class="c-name">洋食</span>
+      </button>
+      <button class="cuisine-btn" id="cbtn-cn" onclick="toggleCuisine('cn')">
+        🥢<span class="c-name">中華</span>
+      </button>
+    </div>
+
+    <div class="sec-label">対象の食事</div>
+    <div class="toggle-row">
+      <button class="toggle-btn on-green" id="mtype-breakfast" onclick="toggleMealType('breakfast')">🌅 朝食</button>
+      <button class="toggle-btn on-green" id="mtype-lunch"     onclick="toggleMealType('lunch')">☀️ 昼食</button>
+      <button class="toggle-btn on-green" id="mtype-dinner"    onclick="toggleMealType('dinner')">🌙 夕食</button>
+    </div>
+
+    <div class="sec-label">生成モード</div>
+    <div class="toggle-row" style="margin-bottom:24px">
+      <button class="toggle-btn"           id="mode-empty" onclick="setFillMode('empty')">空きコマのみ埋める</button>
+      <button class="toggle-btn on-purple" id="mode-all"   onclick="setFillMode('all')">今週を全て上書き</button>
+    </div>
+
+    <button class="generate-btn" onclick="generateMeals()">✨ 献立を自動生成する</button>
+
+    <div id="aiPreview" style="display:none" class="preview-section">
+      <div class="preview-header">
+        <span class="preview-title">生成された献立（プレビュー）</span>
+        <button class="regen-btn" onclick="generateMeals()">🔄 再生成</button>
+      </div>
+      <div class="preview-wrap">
+        <table class="preview-table" id="previewTable"></table>
+      </div>
+      <button class="apply-btn" onclick="applyMeals()">📅 今週の献立に適用する</button>
+    </div>
+  </div>
+
+  <!-- SHOPPING PANEL -->
+  <div id="panel-shopping" style="display:none">
+    <div class="shop-add-row">
+      <select id="shopCat">
+        <option value="野菜">🥦 野菜</option>
+        <option value="肉・魚">🥩 肉・魚</option>
+        <option value="乳製品・卵">🥚 乳・卵</option>
+        <option value="穀物">🌾 穀物</option>
+        <option value="調味料">🧂 調味料</option>
+        <option value="その他">📦 その他</option>
+      </select>
+      <input type="text" id="shopInput" placeholder="材料を追加…" maxlength="30"
+        onkeydown="if(event.key==='Enter')addShopItem()">
+      <button class="shop-add-btn" onclick="addShopItem()">＋</button>
+    </div>
+    <div id="shopList"></div>
+    <div class="shop-actions">
+      <button class="shop-action-btn" onclick="clearChecked()">購入済みを削除</button>
+      <button class="shop-action-btn" onclick="clearAll()">すべて削除</button>
+    </div>
+  </div>
+
+  <!-- CALENDAR PANEL -->
+  <div id="panel-calendar" style="display:none">
+    <div class="cal-nav">
+      <button onclick="calMove(-1)">◀</button>
+      <span class="cal-title" id="calTitle"></span>
+      <button onclick="calMove(+1)">▶</button>
+    </div>
+    <div class="cal-legend">
+      <div class="legend-item"><div class="legend-dot dot-b"></div>朝食</div>
+      <div class="legend-item"><div class="legend-dot dot-l"></div>昼食</div>
+      <div class="legend-item"><div class="legend-dot dot-d"></div>夕食</div>
+    </div>
+    <div class="cal-grid" id="calGrid"></div>
+    <div class="cal-summary" id="calSummary"></div>
+  </div>
+</div>
+
+<script>
+// ── CONSTANTS ─────────────────────────────────────────────────────────
+
+const MEAL_TYPES  = ['breakfast', 'lunch', 'dinner'];
+const MEAL_LABEL  = { breakfast: '朝', lunch: '昼', dinner: '夜' };
+const MEAL_ICON   = { breakfast: '🌅', lunch: '☀️', dinner: '🌙' };
+const DOT_CLASS   = { breakfast: 'dot-b', lunch: 'dot-l', dinner: 'dot-d' };
+const TYPE_NAME   = { breakfast: '朝食', lunch: '昼食', dinner: '夕食' };
+const DAY_NAMES   = ['月','火','水','木','金','土','日'];
+
+const CAT_ICON = {
+  '野菜': '🥦', '肉・魚': '🥩', '乳製品・卵': '🥚',
+  '穀物': '🌾', '調味料': '🧂', 'その他': '📦',
+};
+const CAT_ORDER = ['野菜', '肉・魚', '乳製品・卵', '穀物', '調味料', 'その他'];
+
+// ── MODAL PRESETS (manual entry) ──────────────────────────────────────
+
+const PRESETS = {
+  breakfast: [
+    { name: 'ご飯・味噌汁・卵焼き',  cal: 380 },
+    { name: 'トースト・目玉焼き',     cal: 350 },
+    { name: 'ゆで卵×2・スム―ジ',    cal: 320 },
+    { name: 'シリアル・牛乳',        cal: 280 },
+    { name: 'ヨーグルト・フルーツ',  cal: 200 },
+    { name: 'おにぎり',              cal: 180 },
+  ],
+  lunch: [
+    { name: '日替わり定食',          cal: 650 },
+    { name: 'カレーライス',          cal: 750 },
+    { name: 'ラーメン',              cal: 700 },
+    { name: 'パスタ',               cal: 600 },
+    { name: 'うどん・そば',          cal: 450 },
+    { name: 'サンドイッチ',          cal: 420 },
+    { name: 'お弁当',               cal: 550 },
+    { name: '焼き魚定食',           cal: 580 },
+  ],
+  dinner: [
+  { name: '豆腐と野菜の煮物',      cal: 300 },
+  { name: '蒸し鶏・サラダ',        cal: 350 },
+  { name: '鍋料理（豆腐・野菜）',  cal: 380 },
+  { name: '焼き魚・みそ汁',        cal: 400 },
+  { name: '刺身定食',             cal: 450 },
+  { name: '冷奴・野菜スープ・ご飯', cal: 420 },
+  { name: '茶碗蒸し・白ご飯',      cal: 380 },
+  { name: 'スムージー・豆腐',      cal: 280 },
+],
+};
+
+// ── DISH DATABASE (AI recommendation) ────────────────────────────────
+
+const DISH_DB = {
+  jp: {
+    breakfast: [
+      { name: 'ご飯・味噌汁・焼き魚',       cal: 420 },
+      { name: 'ご飯・味噌汁・納豆',          cal: 380 },
+      { name: 'ご飯・味噌汁・温泉卵',        cal: 360 },
+      { name: 'お茶漬け・漬物',             cal: 280 },
+      { name: 'おにぎり・味噌汁',            cal: 320 },
+      { name: 'ご飯・卵かけごはん・のり',    cal: 370 },
+      { name: 'ご飯・梅干し・焼き海苔・みそ汁', cal: 340 },
+      { name: '雑炊・漬物',                 cal: 300 },
+    ],
+    lunch: [
+      { name: '天ざるそば',                 cal: 560 },
+      { name: '親子丼',                     cal: 650 },
+      { name: 'カツ丼',                     cal: 780 },
+      { name: 'うどん定食',                 cal: 520 },
+      { name: '焼き魚定食',                 cal: 580 },
+      { name: '天丼',                       cal: 700 },
+      { name: '月見そば',                   cal: 450 },
+      { name: 'にぎり寿司セット',           cal: 600 },
+      { name: 'そぼろ丼',                   cal: 620 },
+      { name: '鶏南蛮そば',                 cal: 530 },
+    ],
+    dinner: [
+      { name: '肉じゃが定食',               cal: 680 },
+      { name: '焼き鮭定食',                 cal: 580 },
+      { name: 'すき焼き・ご飯',             cal: 720 },
+      { name: '鍋料理・ご飯',               cal: 520 },
+      { name: '刺身定食',                   cal: 550 },
+      { name: '豚の生姜焼き定食',           cal: 720 },
+      { name: '煮魚定食',                   cal: 560 },
+      { name: 'から揚げ定食',               cal: 750 },
+      { name: '天ぷら定食',                 cal: 800 },
+      { name: '肉豆腐定食',                 cal: 640 },
+    ],
+  },
+  west: {
+    breakfast: [
+      { name: 'トースト・スクランブルエッグ・サラダ', cal: 420 },
+      { name: 'ホットケーキ・フルーツ',      cal: 480 },
+      { name: 'グラノーラ・牛乳・ヨーグルト', cal: 350 },
+      { name: 'バゲット・オムレツ',          cal: 440 },
+      { name: 'シリアル・ヨーグルト・フルーツ', cal: 320 },
+      { name: 'アボカドトースト',            cal: 380 },
+      { name: 'フレンチトースト・サラダ',    cal: 400 },
+      { name: 'エッグベネディクト',          cal: 500 },
+    ],
+    lunch: [
+      { name: 'ハンバーグランチ',            cal: 750 },
+      { name: 'ミートソースパスタ',          cal: 680 },
+      { name: 'グラタン・サラダ',            cal: 620 },
+      { name: 'マルゲリータピザ',            cal: 700 },
+      { name: 'クラブハウスサンド・スープ',  cal: 550 },
+      { name: 'シーザーサラダ・パン',        cal: 450 },
+      { name: 'リゾット',                   cal: 580 },
+      { name: 'オムライス',                 cal: 660 },
+      { name: 'ナポリタン',                 cal: 620 },
+      { name: 'クリームパスタ',             cal: 650 },
+    ],
+    dinner: [
+      { name: 'ローストチキン・ポテト',      cal: 780 },
+      { name: 'ハンバーグ・マッシュポテト',  cal: 820 },
+      { name: 'シーフードパスタ',            cal: 680 },
+      { name: 'ビーフシチュー・パン',        cal: 720 },
+      { name: 'サーモンのムニエル',          cal: 620 },
+      { name: 'クリームシチュー・ライス',    cal: 700 },
+      { name: 'ミートボールスパゲッティ',    cal: 750 },
+      { name: 'チキンのトマト煮込み',        cal: 680 },
+      { name: 'ポークソテー・野菜',          cal: 740 },
+      { name: 'グリルサーモン・サラダ',      cal: 580 },
+    ],
+  },
+  cn: {
+    breakfast: [
+      { name: '中華粥・ザーサイ・漬物',      cal: 300 },
+      { name: '肉まん・豆乳',               cal: 380 },
+      { name: '揚げパン（油条）・豆乳',      cal: 420 },
+      { name: 'ワンタンスープ・ご飯',        cal: 390 },
+      { name: '小籠包・お粥',               cal: 400 },
+      { name: '点心セット・プーアル茶',      cal: 440 },
+      { name: '春巻き・豆乳',               cal: 360 },
+      { name: '担担麺（朝食サイズ）',        cal: 450 },
+    ],
+    lunch: [
+      { name: '醤油ラーメン',               cal: 650 },
+      { name: 'チャーハン定食',             cal: 720 },
+      { name: '回鍋肉定食',                 cal: 700 },
+      { name: '麻婆豆腐定食',               cal: 680 },
+      { name: '餃子定食',                   cal: 640 },
+      { name: 'エビチリ定食',               cal: 660 },
+      { name: 'タンタンメン',               cal: 750 },
+      { name: '海老炒飯',                   cal: 700 },
+      { name: '五目炒め定食',               cal: 620 },
+      { name: '豚骨ラーメン',               cal: 800 },
+    ],
+    dinner: [
+      { name: '麻婆豆腐・ご飯',             cal: 680 },
+      { name: '青椒肉絲定食',               cal: 700 },
+      { name: '酢豚定食',                   cal: 720 },
+      { name: 'エビのチリソース定食',        cal: 680 },
+      { name: '蒸し餃子・炒飯',             cal: 750 },
+      { name: '八宝菜定食',                 cal: 650 },
+      { name: '棒棒鶏サラダ定食',           cal: 600 },
+      { name: '北京風チキン定食',           cal: 720 },
+      { name: '黒酢の豚肉定食',             cal: 700 },
+      { name: '干焼蝦仁定食',               cal: 680 },
+    ],
+  },
+};
+
+const CUISINE_BADGE = { jp: '和', west: '洋', cn: '中' };
+const CUISINE_BADGE_CLASS = { jp: 'badge-jp', west: 'badge-west', cn: 'badge-cn' };
+const PREVIEW_BADGE_CLASS = { jp: 'pbadge-jp', west: 'pbadge-west', cn: 'pbadge-cn' };
+
+// ── API KEY MANAGEMENT ────────────────────────────────────────────────
+
+function getApiKey() {
+  return localStorage.getItem('anthropic_api_key') || '';
+}
+
+function saveApiKey() {
+  const key = document.getElementById('apiKeyInput').value.trim();
+  if (!key) { alert('APIキーを入力してください'); return; }
+  localStorage.setItem('anthropic_api_key', key);
+  updateApiKeyStatus();
+  alert('APIキーを保存しました');
+}
+
+function updateApiKeyStatus() {
+  const key = getApiKey();
+  const el = document.getElementById('apiKeyStatus');
+  if (!el) return;
+  if (key) {
+    el.textContent = '✓ 設定済み（' + key.slice(0, 14) + '...）';
+    el.className = 'apikey-status set';
+    document.getElementById('apiKeyInput').value = key;
+  } else {
+    el.textContent = '未設定 — Anthropicコンソールで取得してください';
+    el.className = 'apikey-status';
+  }
+}
+
+// ── AI CALORIE ESTIMATION ─────────────────────────────────────────────
+
+async function estimateCalorie() {
+  if (!modalState) return;
+  const name = document.getElementById('mealNameInput').value.trim();
+  if (!name) { alert('先に料理名を入力してください'); return; }
+
+  const apiKey = getApiKey();
+  if (!apiKey) {
+    alert('「AIおすすめ」タブでClaude APIキーを設定してください');
+    return;
+  }
+
+  const btn = document.getElementById('aiCalBtn');
+  btn.disabled = true;
+  btn.textContent = '推定中…';
+
+  try {
+    const mealTypeLabel = TYPE_NAME[modalState.type];
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 150,
+        system: '必ずJSON形式のみで回答してください。{"cal": 数値, "note": "根拠"} 以外のテキストは一切含めないでください。',
+        messages: [{
+          role: 'user',
+          content: `カロリーSlism(calorie.slism.jp)を参考に、${mealTypeLabel}「${name}」1人前のカロリーをJSON形式で返してください。例: {"cal": 420, "note": "ご飯150g(250kcal)+味噌汁(40kcal)+焼き鮭80g(130kcal)"}`
+        }]
+      })
+    });
+
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.error?.message || `HTTP ${res.status}`);
+    }
+
+    const data = await res.json();
+    const text = data.content[0].text.trim();
+
+    let cal = null, note = null;
+    try {
+      const json = JSON.parse(text);
+      cal  = parseInt(json.cal);
+      note = json.note || null;
+    } catch {
+      const m = text.match(/\d{2,4}/);
+      if (m) cal = parseInt(m[0]);
+    }
+
+    if (cal && cal >= 50 && cal <= 3000) {
+      document.getElementById('mealCalInput').value = cal;
+      const noteEl = document.getElementById('aiCalNote');
+      if (note) {
+        noteEl.textContent = '📊 ' + note;
+        noteEl.style.display = 'block';
+      } else {
+        noteEl.style.display = 'none';
+      }
+    } else {
+      alert('カロリーを正しく取得できませんでした。料理名を確認して再試行してください。');
+    }
+  } catch (err) {
+    alert('エラー: ' + err.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '✨ AI推定';
+  }
+}
+
+// ── PRESET CALORIE LOOKUP (partial match) ────────────────────────────
+
+function findCalFromPresets(name, type) {
+  const presets = PRESETS[type] || [];
+  const exact = presets.find(p => p.name === name);
+  if (exact) return exact.cal;
+  const partial = presets.find(p => p.name.startsWith(name) || name.startsWith(p.name));
+  if (partial) return partial.cal;
+  return null;
+}
+
+// ── STORAGE ───────────────────────────────────────────────────────────
+
+function getMeal(dateStr, type) {
+  const raw = localStorage.getItem(`kondate_${dateStr}_${type}`);
+  return raw ? JSON.parse(raw) : null;
+}
+function setMeal(dateStr, type, data) {
+  if (data) localStorage.setItem(`kondate_${dateStr}_${type}`, JSON.stringify(data));
+  else localStorage.removeItem(`kondate_${dateStr}_${type}`);
+}
+function getShopList() {
+  const raw = localStorage.getItem('kondate_shopping');
+  return raw ? JSON.parse(raw) : [];
+}
+function saveShopList(list) {
+  localStorage.setItem('kondate_shopping', JSON.stringify(list));
+}
+
+// ── DATE UTILS ────────────────────────────────────────────────────────
+
+function dateToKey(d) {
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+function keyToDate(k) {
+  const [y,m,d] = k.split('-').map(Number);
+  return new Date(y, m-1, d);
+}
+function weekStart(d) {
+  const t = new Date(d);
+  const day = t.getDay();
+  t.setDate(t.getDate() + (day === 0 ? -6 : 1 - day));
+  t.setHours(0,0,0,0);
+  return t;
+}
+function getWeekDates(offset) {
+  const base = new Date();
+  base.setDate(base.getDate() + offset * 7);
+  const ws = weekStart(base);
+  return Array.from({length: 7}, (_, i) => {
+    const d = new Date(ws);
+    d.setDate(d.getDate() + i);
+    return d;
+  });
+}
+
+// ── GLOBAL STATE ──────────────────────────────────────────────────────
+
+const now = new Date();
+let currentTab   = 'week';
+let weekOffset   = 0;
+let calYear      = now.getFullYear();
+let calMonth     = now.getMonth();
+let modalState   = null;
+let editMode     = false;
+let selectedCells = new Set();
+
+// AI state
+let selectedCuisines  = new Set(['jp']);
+let selectedMealTypes = new Set(['breakfast', 'lunch', 'dinner']);
+let fillMode          = 'all';
+let previewData       = null;
+
+// ── INIT ──────────────────────────────────────────────────────────────
+
+setDateBar();
+updateStats();
+renderWeekGrid();
+
+function setDateBar() {
+  const d    = new Date();
+  const days = ['日','月','火','水','木','金','土'];
+  document.getElementById('dateBar').textContent =
+    `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日（${days[d.getDay()]}）`;
+}
+
+// ── STATS ─────────────────────────────────────────────────────────────
+
+function updateStats() {
+  const ws = weekStart(new Date());
+  let totalCal = 0, calDays = 0, filled = 0;
+  for (let i = 0; i < 7; i++) {
+    const d   = new Date(ws);
+    d.setDate(d.getDate() + i);
+    const key = dateToKey(d);
+    let dayCal = 0, hasAny = false;
+    MEAL_TYPES.forEach(t => {
+      const m = getMeal(key, t);
+      if (m) { filled++; hasAny = true; if (m.cal) dayCal += m.cal; }
+    });
+    if (hasAny && dayCal > 0) { totalCal += dayCal; calDays++; }
+  }
+  document.getElementById('avgCal').textContent =
+    calDays > 0 ? Math.round(totalCal / calDays).toLocaleString() : '–';
+  document.getElementById('inputRate').textContent =
+    Math.round(filled / 21 * 100) + '%';
+}
+
+// ── WEEK GRID ─────────────────────────────────────────────────────────
+
+function renderWeekGrid() {
+  const days     = getWeekDates(weekOffset);
+  const todayStr = dateToKey(new Date());
+
+  const f = days[0], l = days[6];
+  document.getElementById('weekTitle').textContent =
+    `${f.getMonth()+1}/${f.getDate()} – ${l.getMonth()+1}/${l.getDate()}`;
+
+  let html = '<thead><tr><th></th>';
+  days.forEach((d, i) => {
+    const key     = dateToKey(d);
+    const isToday = key === todayStr;
+    html += `<th class="${isToday?'today-col':''}">${DAY_NAMES[i]}<br>
+      <span style="font-size:.88rem;font-weight:800;color:${isToday?'#1d976c':'#374151'}">${d.getDate()}</span></th>`;
+  });
+  html += '</tr></thead><tbody>';
+
+  MEAL_TYPES.forEach(type => {
+    html += `<tr><td class="row-label">${MEAL_ICON[type]}<br>${MEAL_LABEL[type]}</td>`;
+    days.forEach(d => {
+      const key     = dateToKey(d);
+      const isToday = key === todayStr;
+      const meal    = getMeal(key, type);
+      const tc      = isToday ? 'today-col' : '';
+      if (meal) {
+        const badgeHtml = meal.cuisine
+          ? `<div class="meal-badge ${CUISINE_BADGE_CLASS[meal.cuisine]}">${CUISINE_BADGE[meal.cuisine]}</div>`
+          : '';
+        const displayCal = meal.cal || findCalFromPresets(meal.name, type);
+        const cellId = key + '|' + type;
+        const isSelected = editMode && selectedCells.has(cellId);
+        const clickFn = editMode
+          ? `toggleCellSelect('${key}','${type}')`
+          : `openModal('${key}','${type}')`;
+        html += `<td class="meal-cell ${tc}${editMode?' edit-selectable has-meal':''}${isSelected?' edit-selected':''}" onclick="${clickFn}">
+          <div class="meal-inner">
+            ${editMode ? `<div class="cell-chk">${isSelected ? '✓' : ''}</div>` : ''}
+            <div class="meal-name">${esc(meal.name)}</div>
+            ${displayCal ? `<div class="meal-cal">${displayCal}kcal</div>` : ''}
+            ${badgeHtml}
+          </div></td>`;
+      } else {
+        const clickFn = editMode ? '' : `onclick="openModal('${key}','${type}')"`;
+        html += `<td class="meal-cell ${tc}${editMode?' edit-selectable':''}" ${clickFn}>
+          <div class="meal-inner"><div class="meal-empty">${editMode ? '' : '＋'}</div></div></td>`;
+      }
+    });
+    html += '</tr>';
+  });
+
+  // Calorie totals row
+  html += '<tr class="cal-row"><td class="row-label">合計</td>';
+  days.forEach(d => {
+    const key     = dateToKey(d);
+    const isToday = key === todayStr;
+    let total = 0, hasCal = false;
+    MEAL_TYPES.forEach(t => {
+      const m = getMeal(key, t);
+      if (m && m.cal) { total += m.cal; hasCal = true; }
+    });
+    if (hasCal) {
+      const cls = total < 1400 ? 'warn' : total > 2400 ? 'over' : '';
+      html += `<td class="${isToday?'today-col':''}"><span class="cal-num ${cls}">${total}</span></td>`;
+    } else {
+      html += `<td class="${isToday?'today-col':''}">–</td>`;
+    }
+  });
+  html += '</tr></tbody>';
+
+  document.getElementById('mealGrid').innerHTML = html;
+}
+
+function weekMove(delta) { weekOffset += delta; renderWeekGrid(); }
+function weekToday()     { weekOffset = 0;      renderWeekGrid(); }
+
+// ── EDIT MODE ─────────────────────────────────────────────────────────
+
+function toggleEditMode() {
+  editMode = !editMode;
+  selectedCells.clear();
+  document.getElementById('editBar').classList.toggle('active', editMode);
+  const btn = document.getElementById('editModeBtn');
+  btn.textContent = editMode ? '✕ 終了' : '☑️ 選択';
+  btn.classList.toggle('active', editMode);
+  updateEditBarInfo();
+  renderWeekGrid();
+}
+
+function toggleCellSelect(key, type) {
+  const id = key + '|' + type;
+  if (selectedCells.has(id)) selectedCells.delete(id);
+  else selectedCells.add(id);
+  updateEditBarInfo();
+  renderWeekGrid();
+}
+
+function updateEditBarInfo() {
+  document.getElementById('editBarInfo').textContent = selectedCells.size + '件選択中';
+}
+
+function selectAllMeals() {
+  const days = getWeekDates(weekOffset);
+  days.forEach(d => {
+    const key = dateToKey(d);
+    MEAL_TYPES.forEach(type => {
+      if (getMeal(key, type)) selectedCells.add(key + '|' + type);
+    });
+  });
+  updateEditBarInfo();
+  renderWeekGrid();
+}
+
+function deleteSelected() {
+  if (selectedCells.size === 0) { alert('削除する献立を選択してください'); return; }
+  if (!confirm(selectedCells.size + '件の献立を削除しますか？')) return;
+  selectedCells.forEach(id => {
+    const sep = id.lastIndexOf('|');
+    const key  = id.slice(0, sep);
+    const type = id.slice(sep + 1);
+    setMeal(key, type, null);
+  });
+  selectedCells.clear();
+  updateEditBarInfo();
+  renderWeekGrid();
+  updateStats();
+}
+
+// ── MODAL ─────────────────────────────────────────────────────────────
+
+function openModal(dateStr, type) {
+  modalState = { dateStr, type };
+
+  const d    = keyToDate(dateStr);
+  const days = ['日','月','火','水','木','金','土'];
+  document.getElementById('modalTitle').textContent =
+    `${d.getMonth()+1}月${d.getDate()}日（${days[d.getDay()]}）${TYPE_NAME[type]}`;
+
+  document.getElementById('presetsGrid').innerHTML = PRESETS[type].map((p, i) =>
+    `<button class="preset-btn" id="preset_${i}" onclick="selectPreset(${i})">
+      <span class="p-name">${esc(p.name)}</span>
+      <span class="p-cal">${p.cal}kcal</span>
+    </button>`
+  ).join('');
+
+  const existing = getMeal(dateStr, type);
+  document.getElementById('mealNameInput').value = existing ? existing.name : '';
+  document.getElementById('mealCalInput').value  = existing && existing.cal ? existing.cal : '';
+
+  document.getElementById('modalOverlay').classList.add('open');
+  setTimeout(() => document.getElementById('mealNameInput').focus(), 50);
+}
+
+function selectPreset(idx) {
+  const p = PRESETS[modalState.type][idx];
+  document.getElementById('mealNameInput').value = p.name;
+  document.getElementById('mealCalInput').value  = p.cal;
+  document.querySelectorAll('.preset-btn').forEach((btn, i) =>
+    btn.classList.toggle('selected', i === idx));
+}
+
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('open');
+  document.getElementById('aiCalNote').style.display = 'none';
+  modalState = null;
+}
+function overlayClick(e) {
+  if (e.target === document.getElementById('modalOverlay')) closeModal();
+}
+
+function saveMeal() {
+  if (!modalState) return;
+  const name = document.getElementById('mealNameInput').value.trim();
+  if (!name) { closeModal(); return; }
+  let cal = parseInt(document.getElementById('mealCalInput').value) || null;
+  if (!cal) {
+    cal = findCalFromPresets(name, modalState.type);
+  }
+  setMeal(modalState.dateStr, modalState.type, { name, cal });
+  closeModal();
+  renderWeekGrid();
+  updateStats();
+}
+
+function clearMeal() {
+  if (!modalState) return;
+  setMeal(modalState.dateStr, modalState.type, null);
+  closeModal();
+  renderWeekGrid();
+  updateStats();
+}
+
+// ── AI CUISINE SELECTION ──────────────────────────────────────────────
+
+function toggleCuisine(key) {
+  if (selectedCuisines.has(key) && selectedCuisines.size === 1) return;
+  if (selectedCuisines.has(key)) selectedCuisines.delete(key);
+  else selectedCuisines.add(key);
+  updateCuisineUI();
+}
+function updateCuisineUI() {
+  const map = { jp: 'active-jp', west: 'active-west', cn: 'active-cn' };
+  ['jp','west','cn'].forEach(k => {
+    document.getElementById('cbtn-' + k).className =
+      'cuisine-btn' + (selectedCuisines.has(k) ? ' ' + map[k] : '');
+  });
+}
+
+function toggleMealType(type) {
+  if (selectedMealTypes.has(type) && selectedMealTypes.size === 1) return;
+  if (selectedMealTypes.has(type)) selectedMealTypes.delete(type);
+  else selectedMealTypes.add(type);
+  MEAL_TYPES.forEach(t => {
+    document.getElementById('mtype-' + t).className =
+      'toggle-btn' + (selectedMealTypes.has(t) ? ' on-green' : '');
+  });
+}
+
+function setFillMode(mode) {
+  fillMode = mode;
+  document.getElementById('mode-empty').className =
+    'toggle-btn' + (mode === 'empty' ? ' on-purple' : '');
+  document.getElementById('mode-all').className =
+    'toggle-btn' + (mode === 'all' ? ' on-purple' : '');
+}
+
+// ── AI GENERATION ─────────────────────────────────────────────────────
+
+function generateMeals() {
+  try {
+    var days       = getWeekDates(weekOffset);
+    var cuisineArr = [];
+    selectedCuisines.forEach(function(c) { cuisineArr.push(c); });
+
+    if (cuisineArr.length === 0) {
+      alert('料理ジャンルを1つ以上選んでください');
+      return;
+    }
+
+    // Pre-initialize all date keys
+    var generated = {};
+    for (var i = 0; i < days.length; i++) {
+      generated[dateToKey(days[i])] = {};
+    }
+
+    for (var ti = 0; ti < MEAL_TYPES.length; ti++) {
+      var type = MEAL_TYPES[ti];
+      if (!selectedMealTypes.has(type)) continue;
+
+      var usedNames = [];
+
+      for (var di = 0; di < days.length; di++) {
+        var key      = dateToKey(days[di]);
+        var existing = getMeal(key, type);
+
+        if (fillMode === 'empty' && existing) {
+          var copy = JSON.parse(JSON.stringify(existing));
+          copy.isExisting = true;
+          generated[key][type] = copy;
+          continue;
+        }
+
+        var cuisine = cuisineArr[Math.floor(Math.random() * cuisineArr.length)];
+        var pool    = DISH_DB[cuisine][type];
+
+        var available = [];
+        for (var pi = 0; pi < pool.length; pi++) {
+          if (usedNames.indexOf(pool[pi].name) === -1) available.push(pool[pi]);
+        }
+        if (available.length === 0) available = pool;
+
+        var pick = available[Math.floor(Math.random() * available.length)];
+        usedNames.push(pick.name);
+        generated[key][type] = { name: pick.name, cal: pick.cal, cuisine: cuisine };
+      }
+    }
+
+    previewData = { generated: generated, days: days };
+    renderPreview();
+
+    var preview = document.getElementById('aiPreview');
+    preview.style.display = 'block';
+    setTimeout(function() {
+      preview.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }, 50);
+
+  } catch (err) {
+    alert('生成中にエラーが発生しました: ' + err.message);
+  }
+}
+
+function renderPreview() {
+  var generated = previewData.generated;
+  var days      = previewData.days;
+  var todayStr  = dateToKey(new Date());
+
+  var html = '<thead><tr><th></th>';
+  for (var i = 0; i < days.length; i++) {
+    var key     = dateToKey(days[i]);
+    var isToday = (key === todayStr);
+    html += '<th class="' + (isToday ? 'today-col' : '') + '">';
+    html += DAY_NAMES[i] + '<br><small style="font-size:.82rem;font-weight:800">';
+    html += days[i].getDate() + '</small></th>';
+  }
+  html += '</tr></thead><tbody>';
+
+  for (var ti = 0; ti < MEAL_TYPES.length; ti++) {
+    var type = MEAL_TYPES[ti];
+    if (!selectedMealTypes.has(type)) continue;
+
+    html += '<tr><td class="row-label">' + MEAL_ICON[type] + '<br>' + MEAL_LABEL[type] + '</td>';
+
+    for (var di = 0; di < days.length; di++) {
+      var key     = dateToKey(days[di]);
+      var isToday = (key === todayStr);
+      var meal    = generated[key] ? generated[key][type] : null;
+
+      if (!meal) {
+        html += '<td class="preview-cell ' + (isToday ? 'today-col' : '') + '">–</td>';
+        continue;
+      }
+
+      var bc = meal.isExisting ? 'pbadge-existing'
+             : meal.cuisine === 'jp'   ? 'pbadge-jp'
+             : meal.cuisine === 'west' ? 'pbadge-west'
+             : 'pbadge-cn';
+      var bl = meal.isExisting ? '既存' : (CUISINE_BADGE[meal.cuisine] || '');
+
+      html += '<td class="preview-cell ' + (isToday ? 'today-col' : '') + '">';
+      html += '<div class="preview-inner">';
+      html += '<div class="preview-name">' + esc(meal.name) + '</div>';
+      if (meal.cal) html += '<div class="preview-cal">' + meal.cal + 'kcal</div>';
+      html += '<div class="preview-badge ' + bc + '">' + bl + '</div>';
+      html += '</div></td>';
+
+    }  // end inner for (days)
+    html += '</tr>';
+  }  // end outer for (MEAL_TYPES)
+  html += '</tbody>';
+
+  document.getElementById('previewTable').innerHTML = html;
+}
+
+function applyMeals() {
+  if (!previewData) return;
+  const { generated, days } = previewData;
+
+  days.forEach(d => {
+    const key = dateToKey(d);
+    MEAL_TYPES.forEach(type => {
+      const meal = generated[key]?.[type];
+      if (meal && !meal.isExisting) {
+        setMeal(key, type, { name: meal.name, cal: meal.cal || null, cuisine: meal.cuisine });
+      }
+    });
+  });
+
+  renderWeekGrid();
+  updateStats();
+  switchTab('week');
+}
+
+// ── SHOPPING LIST ──────────────────────────────────────────────────────
+
+function addShopItem() {
+  const input = document.getElementById('shopInput');
+  const name  = input.value.trim();
+  if (!name) return;
+  const cat  = document.getElementById('shopCat').value;
+  const list = getShopList();
+  list.push({ id: Date.now(), name, cat, checked: false });
+  saveShopList(list);
+  input.value = '';
+  renderShopList();
+}
+
+function toggleShopItem(id) {
+  const list = getShopList();
+  const item = list.find(i => i.id === id);
+  if (item) item.checked = !item.checked;
+  saveShopList(list);
+  renderShopList();
+}
+
+function deleteShopItem(id) {
+  saveShopList(getShopList().filter(i => i.id !== id));
+  renderShopList();
+}
+
+function clearChecked() {
+  saveShopList(getShopList().filter(i => !i.checked));
+  renderShopList();
+}
+
+function clearAll() {
+  if (!confirm('買い物リストをすべて削除しますか？')) return;
+  saveShopList([]);
+  renderShopList();
+}
+
+function renderShopList() {
+  const list = getShopList();
+  const el   = document.getElementById('shopList');
+
+  if (list.length === 0) {
+    el.innerHTML = '<div class="shop-empty">📋 まだ材料がありません<br>上から追加してください</div>';
+    return;
+  }
+
+  const bycat = {};
+  list.forEach(item => {
+    if (!bycat[item.cat]) bycat[item.cat] = [];
+    bycat[item.cat].push(item);
+  });
+
+  el.innerHTML = CAT_ORDER
+    .filter(cat => bycat[cat])
+    .map(cat => `
+      <div class="shop-group">
+        <div class="shop-cat-label">${CAT_ICON[cat]} ${cat}</div>
+        <div class="shop-items">
+          ${bycat[cat].map(item => `
+            <div class="shop-item ${item.checked?'checked':''}" onclick="toggleShopItem(${item.id})">
+              <div class="shop-check">${item.checked?'✓':''}</div>
+              <div class="shop-item-name">${esc(item.name)}</div>
+              <div class="shop-del" onclick="event.stopPropagation();deleteShopItem(${item.id})">✕</div>
+            </div>`).join('')}
+        </div>
+      </div>`).join('');
+}
+
+// ── CALENDAR ──────────────────────────────────────────────────────────
+
+function renderCalendar() {
+  const y = calYear, m = calMonth;
+  document.getElementById('calTitle').textContent = `${y}年 ${m+1}月`;
+
+  const firstDay = new Date(y, m, 1).getDay();
+  const lastDate  = new Date(y, m+1, 0).getDate();
+  const todayStr  = dateToKey(new Date());
+  const today     = new Date();
+
+  const DAY_HEADERS = ['日','月','火','水','木','金','土'];
+  let html = DAY_HEADERS.map(d => `<div class="cal-header-cell">${d}</div>`).join('');
+
+  for (let i = 0; i < firstDay; i++) html += '<div class="cal-cell empty"></div>';
+
+  let totalMeals = 0, fullDays = 0, activeDays = 0;
+  const passedDays = (y === today.getFullYear() && m === today.getMonth())
+    ? today.getDate() : lastDate;
+
+  for (let d = 1; d <= lastDate; d++) {
+    const key     = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const isToday = key === todayStr;
+    const isFuture = key > todayStr;
+
+    let count = 0;
+    const dots = MEAL_TYPES.map(t => {
+      const meal = getMeal(key, t);
+      if (meal) { count++; return `<div class="meal-dot ${DOT_CLASS[t]}"></div>`; }
+      return `<div class="meal-dot dot-e"></div>`;
+    }).join('');
+
+    if (!isFuture) {
+      totalMeals += count;
+      if (count === 3) fullDays++;
+      if (count > 0)   activeDays++;
+    }
+
+    html += `<div class="cal-cell ${isToday?'today':''}">
+      <div class="cal-day-num">${d}</div>
+      <div class="cal-dots">${dots}</div>
+    </div>`;
+  }
+
+  document.getElementById('calGrid').innerHTML = html;
+
+  const avg = passedDays > 0 ? Math.round(totalMeals / passedDays * 10) / 10 : 0;
+  document.getElementById('calSummary').innerHTML = `
+    <div class="cal-sum-box">
+      <div class="cs-label">📝 記録日数</div>
+      <div class="cs-ring">${activeDays}<span style="font-size:.8rem;font-weight:400;color:#aaa"> 日</span></div>
+      <div class="cs-sub">/ ${passedDays}日中</div>
+    </div>
+    <div class="cal-sum-box">
+      <div class="cs-label">✅ 3食達成日</div>
+      <div class="cs-ring">${fullDays}<span style="font-size:.8rem;font-weight:400;color:#aaa"> 日</span></div>
+      <div class="cs-sub">達成率 ${passedDays>0?Math.round(fullDays/passedDays*100):0}%</div>
+    </div>
+    <div class="cal-sum-box">
+      <div class="cs-label">🍽 1日平均</div>
+      <div class="cs-ring">${avg}<span style="font-size:.8rem;font-weight:400;color:#aaa"> 食</span></div>
+      <div class="cs-sub">記録</div>
+    </div>`;
+}
+
+function calMove(delta) {
+  calMonth += delta;
+  if (calMonth < 0)  { calMonth = 11; calYear--; }
+  if (calMonth > 11) { calMonth = 0;  calYear++; }
+  renderCalendar();
+}
+
+// ── TAB SWITCH ────────────────────────────────────────────────────────
+
+function switchTab(tab) {
+  currentTab = tab;
+  ['week','ai','shopping','calendar'].forEach(t => {
+    document.getElementById('panel-' + t).style.display = t === tab ? 'block' : 'none';
+  });
+  document.getElementById('tab-week').className     = 'tab-btn' + (tab === 'week'     ? ' active-week' : '');
+  document.getElementById('tab-ai').className       = 'tab-btn' + (tab === 'ai'       ? ' active-ai'   : '');
+  document.getElementById('tab-shopping').className = 'tab-btn' + (tab === 'shopping' ? ' active-shop' : '');
+  document.getElementById('tab-calendar').className = 'tab-btn' + (tab === 'calendar' ? ' active-cal'  : '');
+
+  if (tab === 'ai')       updateApiKeyStatus();
+  if (tab === 'shopping') renderShopList();
+  if (tab === 'calendar') renderCalendar();
+}
+
+// ── UTILS ─────────────────────────────────────────────────────────────
+
+function esc(s) {
+  return String(s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./sw.js');
+}
+</script>
+</body>
+</html>
