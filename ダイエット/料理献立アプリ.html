@@ -839,9 +839,195 @@
     .apikey-save-btn:hover { background: #7c3aed; }
     .apikey-status { font-size: 0.72rem; color: #9ca3af; margin-top: 6px; }
     .apikey-status.set { color: #059669; }
+
+    /* ── カロミル風 栄養パネル ── */
+    .nutrition-panel {
+      background: #fff;
+      border: 1.5px solid #e5e7eb;
+      border-radius: 16px;
+      padding: 16px;
+      margin-bottom: 18px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+    .np-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    .np-title { font-size: 0.88rem; font-weight: 700; color: #374151; }
+    .goal-set-btn {
+      font-size: 0.72rem;
+      padding: 4px 10px;
+      border: 1.5px solid #d1d5db;
+      border-radius: 8px;
+      background: #f9fafb;
+      cursor: pointer;
+      color: #6b7280;
+      font-family: inherit;
+      font-weight: 600;
+      transition: all .15s;
+    }
+    .goal-set-btn:hover { border-color: #1d976c; color: #155d46; }
+
+    .cal-goal-row {
+      display: flex;
+      align-items: baseline;
+      gap: 4px;
+      margin-bottom: 6px;
+    }
+    .cal-consumed { font-size: 1.8rem; font-weight: 800; color: #1d976c; }
+    .cal-sep      { font-size: 1rem; color: #d1d5db; }
+    .cal-goal-num { font-size: 1rem; font-weight: 600; color: #9ca3af; }
+    .cal-unit     { font-size: 0.78rem; color: #9ca3af; margin-left: 2px; }
+    .cal-remain   { margin-left: auto; font-size: 0.75rem; color: #6b7280; font-weight: 600; }
+
+    .cal-bar-wrap {
+      height: 10px;
+      background: #f0fdf4;
+      border-radius: 6px;
+      overflow: hidden;
+      margin-bottom: 14px;
+    }
+    .cal-bar {
+      height: 100%;
+      background: linear-gradient(90deg, #1d976c, #34d399);
+      border-radius: 6px;
+      transition: width .5s ease;
+      max-width: 100%;
+    }
+    .cal-bar.over { background: linear-gradient(90deg, #ef4444, #f97316); }
+
+    .pfc-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px;
+    }
+    .pfc-item { display: flex; flex-direction: column; gap: 4px; }
+    .pfc-label { font-size: 0.68rem; font-weight: 700; color: #6b7280; }
+    .pfc-bar-wrap {
+      height: 6px;
+      background: #f3f4f6;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .pfc-bar { height: 100%; border-radius: 4px; transition: width .5s ease; max-width: 100%; }
+    .pfc-p { background: #3b82f6; }
+    .pfc-f { background: #f59e0b; }
+    .pfc-c { background: #f97316; }
+    .pfc-nums { font-size: 0.68rem; color: #6b7280; }
+    .pfc-nums span { font-weight: 700; color: #374151; }
+
+    /* food search in modal */
+    .food-search-wrap { position: relative; margin-bottom: 8px; }
+    .food-results {
+      max-height: 160px;
+      overflow-y: auto;
+      border: 1.5px solid #e5e7eb;
+      border-radius: 10px;
+      margin-bottom: 12px;
+      display: none;
+    }
+    .food-result-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 12px;
+      cursor: pointer;
+      border-bottom: 1px solid #f3f4f6;
+      transition: background .1s;
+    }
+    .food-result-item:last-child { border-bottom: none; }
+    .food-result-item:hover { background: #f0fdf4; }
+    .fr-name { font-size: 0.82rem; font-weight: 600; color: #374151; }
+    .fr-macros { font-size: 0.68rem; color: #9ca3af; }
+
+    /* PFC inputs in modal */
+    .pfc-inputs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 18px;
+    }
+    .pfc-input-box { flex: 1; }
+    .pfc-input-box label {
+      display: block;
+      font-size: 0.7rem;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+    .pfc-input-box label.lp { color: #3b82f6; }
+    .pfc-input-box label.lf { color: #f59e0b; }
+    .pfc-input-box label.lc { color: #f97316; }
+    .pfc-input-field {
+      width: 100%;
+      border: 2px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 7px 8px;
+      font-size: 0.85rem;
+      outline: none;
+      font-family: inherit;
+      transition: border-color .2s;
+      text-align: center;
+    }
+    .pfc-input-field:focus { border-color: #1d976c; }
+
+    /* goal modal */
+    .goal-modal-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .goal-input-box label {
+      display: block;
+      font-size: 0.73rem;
+      font-weight: 700;
+      color: #6b7280;
+      margin-bottom: 5px;
+    }
+    .goal-input {
+      width: 100%;
+      border: 2px solid #e5e7eb;
+      border-radius: 10px;
+      padding: 9px 12px;
+      font-size: 0.9rem;
+      outline: none;
+      font-family: inherit;
+      transition: border-color .2s;
+    }
+    .goal-input:focus { border-color: #1d976c; }
   </style>
 </head>
 <body>
+
+<!-- GOAL MODAL -->
+<div class="modal-overlay" id="goalModalOverlay" onclick="if(event.target===this)closeGoalModal()">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div class="modal-title">⚙️ 1日の目標設定</div>
+      <button class="modal-close" onclick="closeGoalModal()">✕</button>
+    </div>
+    <div class="goal-modal-grid">
+      <div class="goal-input-box">
+        <label>🔥 カロリー目標 (kcal)</label>
+        <input type="number" class="goal-input" id="goalCalInput" placeholder="1800" min="500" max="5000">
+      </div>
+      <div class="goal-input-box">
+        <label style="color:#3b82f6">🥩 タンパク質目標 (g)</label>
+        <input type="number" class="goal-input" id="goalProteinInput" placeholder="60" min="0" max="500">
+      </div>
+      <div class="goal-input-box">
+        <label style="color:#f59e0b">🥑 脂質目標 (g)</label>
+        <input type="number" class="goal-input" id="goalFatInput" placeholder="50" min="0" max="500">
+      </div>
+      <div class="goal-input-box">
+        <label style="color:#f97316">🍚 炭水化物目標 (g)</label>
+        <input type="number" class="goal-input" id="goalCarbsInput" placeholder="250" min="0" max="1000">
+      </div>
+    </div>
+    <button class="modal-save" style="width:100%" onclick="saveGoals()">保存する</button>
+  </div>
+</div>
 
 <!-- MEAL MODAL -->
 <div class="modal-overlay" id="modalOverlay" onclick="overlayClick(event)">
@@ -852,6 +1038,13 @@
     </div>
     <div class="modal-sec">クイック選択</div>
     <div class="presets-grid" id="presetsGrid"></div>
+    <div class="modal-sec">食品を検索 <small>（名前で絞り込み）</small></div>
+    <div class="food-search-wrap">
+      <input type="text" class="modal-input" id="foodSearchInput" placeholder="例：鶏むね肉、ご飯、卵…"
+        oninput="searchFoods(this.value)" autocomplete="off">
+    </div>
+    <div id="foodResults" class="food-results"></div>
+
     <div class="modal-sec">料理名</div>
     <input type="text" class="modal-input" id="mealNameInput" placeholder="例：鮭の塩焼き定食" maxlength="30"
       onkeydown="if(event.key==='Enter')saveMeal()">
@@ -862,7 +1055,22 @@
       <span>kcal</span>
       <button class="ai-cal-btn" id="aiCalBtn" onclick="estimateCalorie()">✨ AI推定</button>
     </div>
-    <div id="aiCalNote" style="display:none; font-size:0.72rem; color:#6d28d9; background:#f5f3ff; border-radius:8px; padding:8px 10px; margin-bottom:14px; line-height:1.6;"></div>
+    <div id="aiCalNote" style="display:none; font-size:0.72rem; color:#6d28d9; background:#f5f3ff; border-radius:8px; padding:8px 10px; margin-bottom:10px; line-height:1.6;"></div>
+    <div class="modal-sec">PFC <small>（省略可）</small></div>
+    <div class="pfc-inputs">
+      <div class="pfc-input-box">
+        <label class="lp">🥩 タンパク質 (g)</label>
+        <input type="number" class="pfc-input-field" id="mealProteinInput" placeholder="0" min="0" max="300">
+      </div>
+      <div class="pfc-input-box">
+        <label class="lf">🥑 脂質 (g)</label>
+        <input type="number" class="pfc-input-field" id="mealFatInput" placeholder="0" min="0" max="300">
+      </div>
+      <div class="pfc-input-box">
+        <label class="lc">🍚 炭水化物 (g)</label>
+        <input type="number" class="pfc-input-field" id="mealCarbsInput" placeholder="0" min="0" max="500">
+      </div>
+    </div>
     <div class="modal-btns">
       <button class="modal-save" onclick="saveMeal()">保存する</button>
       <button class="modal-clear" onclick="clearMeal()">削除</button>
@@ -876,6 +1084,40 @@
 
   <div class="date-bar" id="dateBar"></div>
 
+  <!-- カロミル風 栄養パネル -->
+  <div class="nutrition-panel">
+    <div class="np-header">
+      <span class="np-title">今日の栄養摂取</span>
+      <button class="goal-set-btn" onclick="openGoalModal()">⚙️ 目標設定</button>
+    </div>
+    <div class="cal-goal-row">
+      <span class="cal-consumed" id="todayTotalCal">0</span>
+      <span class="cal-sep">/</span>
+      <span class="cal-goal-num" id="goalCalDisplay">1800</span>
+      <span class="cal-unit">kcal</span>
+      <span class="cal-remain">残り <b id="calRemain">1800</b> kcal</span>
+    </div>
+    <div class="cal-bar-wrap">
+      <div class="cal-bar" id="calBar" style="width:0%"></div>
+    </div>
+    <div class="pfc-grid">
+      <div class="pfc-item">
+        <div class="pfc-label">🥩 タンパク質</div>
+        <div class="pfc-bar-wrap"><div class="pfc-bar pfc-p" id="pBar" style="width:0%"></div></div>
+        <div class="pfc-nums"><span id="todayP">0</span>g / <span id="goalPDisplay">60</span>g</div>
+      </div>
+      <div class="pfc-item">
+        <div class="pfc-label">🥑 脂質</div>
+        <div class="pfc-bar-wrap"><div class="pfc-bar pfc-f" id="fBar" style="width:0%"></div></div>
+        <div class="pfc-nums"><span id="todayF">0</span>g / <span id="goalFDisplay">50</span>g</div>
+      </div>
+      <div class="pfc-item">
+        <div class="pfc-label">🍚 炭水化物</div>
+        <div class="pfc-bar-wrap"><div class="pfc-bar pfc-c" id="cBar" style="width:0%"></div></div>
+        <div class="pfc-nums"><span id="todayC">0</span>g / <span id="goalCDisplay">250</span>g</div>
+      </div>
+    </div>
+  </div>
   <div class="stats-row">
     <div class="stat-box">
       <div class="s-label">今週の平均カロリー</div>
@@ -1174,6 +1416,50 @@ const DISH_DB = {
   },
 };
 
+// ── FOOD DATABASE ─────────────────────────────────────────────────────
+const FOOD_DB = [
+  { name: '鶏むね肉（100g）',        cal: 116, p: 23.3, f: 1.9,  c: 0   },
+  { name: '鶏もも肉（100g）',        cal: 190, p: 16.6, f: 14.2, c: 0   },
+  { name: '豚ロース（100g）',        cal: 263, p: 19.3, f: 19.2, c: 0.2 },
+  { name: '牛もも肉（100g）',        cal: 182, p: 20.7, f: 10.7, c: 0.6 },
+  { name: '鮭（100g）',             cal: 133, p: 22.3, f: 4.1,  c: 0.1 },
+  { name: 'まぐろ赤身（100g）',      cal: 125, p: 26.4, f: 1.4,  c: 0.1 },
+  { name: 'ゆで卵（1個・60g）',      cal: 91,  p: 7.7,  f: 6.2,  c: 0.3 },
+  { name: '豆腐 木綿（150g）',       cal: 114, p: 9.9,  f: 6.8,  c: 1.8 },
+  { name: '納豆（1パック・40g）',    cal: 76,  p: 6.2,  f: 4.0,  c: 5.4 },
+  { name: 'ご飯（茶碗1杯・150g）',   cal: 252, p: 3.8,  f: 0.5,  c: 55.7},
+  { name: '食パン（6枚切り1枚）',    cal: 158, p: 5.6,  f: 2.5,  c: 28.0},
+  { name: 'うどん ゆで（200g）',     cal: 210, p: 5.2,  f: 0.8,  c: 43.2},
+  { name: 'そば ゆで（200g）',       cal: 264, p: 9.6,  f: 2.0,  c: 48.8},
+  { name: 'パスタ 乾（80g）',        cal: 294, p: 10.5, f: 1.4,  c: 58.6},
+  { name: 'じゃがいも（中1個・100g）',cal: 76, p: 1.6,  f: 0.1,  c: 17.6},
+  { name: 'キャベツ（100g）',        cal: 23,  p: 1.3,  f: 0.2,  c: 5.2 },
+  { name: 'トマト（中1個・150g）',   cal: 29,  p: 1.1,  f: 0.2,  c: 5.6 },
+  { name: 'ほうれん草（100g）',      cal: 20,  p: 2.2,  f: 0.4,  c: 3.1 },
+  { name: 'ブロッコリー（100g）',    cal: 37,  p: 4.3,  f: 0.5,  c: 6.6 },
+  { name: '牛乳（200ml）',           cal: 134, p: 6.6,  f: 7.6,  c: 9.6 },
+  { name: 'ヨーグルト 無糖（100g）', cal: 62,  p: 3.6,  f: 3.0,  c: 4.9 },
+  { name: 'バナナ（1本・100g）',     cal: 86,  p: 1.1,  f: 0.2,  c: 22.5},
+  { name: 'りんご（1/2個・100g）',   cal: 61,  p: 0.2,  f: 0.2,  c: 16.2},
+  { name: 'みそ汁（1杯）',           cal: 40,  p: 2.5,  f: 1.5,  c: 3.5 },
+  { name: 'カレーライス（1人前）',   cal: 750, p: 18,   f: 22,   c: 110 },
+  { name: 'ラーメン（1杯）',         cal: 500, p: 18,   f: 14,   c: 70  },
+  { name: 'おにぎり（1個・100g）',   cal: 180, p: 3.1,  f: 0.5,  c: 39.4},
+  { name: 'ハンバーグ（1個・100g）', cal: 220, p: 14,   f: 15,   c: 10  },
+  { name: '唐揚げ（2個・80g）',      cal: 210, p: 15,   f: 14,   c: 8   },
+  { name: 'サラダ 野菜のみ（100g）', cal: 20,  p: 1.2,  f: 0.2,  c: 4.0 },
+  { name: '焼き鮭（1切れ・80g）',    cal: 106, p: 17.8, f: 3.3,  c: 0.1 },
+  { name: '目玉焼き（1個）',         cal: 100, p: 6.2,  f: 7.7,  c: 0.3 },
+  { name: 'プロテイン（1杯・30g）',  cal: 120, p: 24,   f: 1.5,  c: 3   },
+  { name: 'グラノーラ（50g）',       cal: 224, p: 4.8,  f: 7.5,  c: 35  },
+  { name: '天ぷら盛り合わせ',        cal: 320, p: 8,    f: 18,   c: 32  },
+  { name: '刺身盛り合わせ（100g）',  cal: 130, p: 22,   f: 3,    c: 2   },
+  { name: '豚汁（1杯）',             cal: 130, p: 6,    f: 7,    c: 10  },
+  { name: 'チャーハン（1人前）',     cal: 600, p: 14,   f: 20,   c: 85  },
+  { name: 'オムレツ（2個分）',       cal: 200, p: 13,   f: 15,   c: 2   },
+  { name: 'シリアル（40g）',         cal: 156, p: 3.6,  f: 2.4,  c: 31  },
+];
+
 const CUISINE_BADGE = { jp: '和', west: '洋', cn: '中' };
 const CUISINE_BADGE_CLASS = { jp: 'badge-jp', west: 'badge-west', cn: 'badge-cn' };
 const PREVIEW_BADGE_CLASS = { jp: 'pbadge-jp', west: 'pbadge-west', cn: 'pbadge-cn' };
@@ -1282,6 +1568,107 @@ async function estimateCalorie() {
   }
 }
 
+// ── GOAL MANAGEMENT ───────────────────────────────────────────────────
+
+const DEFAULT_GOALS = { cal: 1800, protein: 60, fat: 50, carbs: 250 };
+
+function getGoals() {
+  const raw = localStorage.getItem('kondate_goals');
+  return raw ? Object.assign({}, DEFAULT_GOALS, JSON.parse(raw)) : { ...DEFAULT_GOALS };
+}
+function saveGoals() {
+  const goals = {
+    cal:     parseInt(document.getElementById('goalCalInput').value)     || DEFAULT_GOALS.cal,
+    protein: parseInt(document.getElementById('goalProteinInput').value) || DEFAULT_GOALS.protein,
+    fat:     parseInt(document.getElementById('goalFatInput').value)     || DEFAULT_GOALS.fat,
+    carbs:   parseInt(document.getElementById('goalCarbsInput').value)   || DEFAULT_GOALS.carbs,
+  };
+  localStorage.setItem('kondate_goals', JSON.stringify(goals));
+  closeGoalModal();
+  updateNutritionPanel();
+}
+function openGoalModal() {
+  const g = getGoals();
+  document.getElementById('goalCalInput').value     = g.cal;
+  document.getElementById('goalProteinInput').value = g.protein;
+  document.getElementById('goalFatInput').value     = g.fat;
+  document.getElementById('goalCarbsInput').value   = g.carbs;
+  document.getElementById('goalModalOverlay').classList.add('open');
+}
+function closeGoalModal() {
+  document.getElementById('goalModalOverlay').classList.remove('open');
+}
+
+// ── NUTRITION PANEL ───────────────────────────────────────────────────
+
+function updateNutritionPanel() {
+  const today = dateToKey(new Date());
+  const goals = getGoals();
+  let totalCal = 0, totalP = 0, totalF = 0, totalC = 0;
+
+  MEAL_TYPES.forEach(type => {
+    const m = getMeal(today, type);
+    if (!m) return;
+    totalCal += m.cal     || 0;
+    totalP   += m.protein || 0;
+    totalF   += m.fat     || 0;
+    totalC   += m.carbs   || 0;
+  });
+
+  const pct = v => Math.min(Math.round(v * 100), 100);
+
+  document.getElementById('todayTotalCal').textContent = totalCal;
+  document.getElementById('goalCalDisplay').textContent = goals.cal;
+  document.getElementById('calRemain').textContent = Math.max(goals.cal - totalCal, 0);
+  const calPct = pct(totalCal / goals.cal);
+  const calBarEl = document.getElementById('calBar');
+  calBarEl.style.width = calPct + '%';
+  calBarEl.className = 'cal-bar' + (totalCal > goals.cal ? ' over' : '');
+
+  document.getElementById('todayP').textContent = totalP;
+  document.getElementById('goalPDisplay').textContent = goals.protein;
+  document.getElementById('pBar').style.width = pct(totalP / goals.protein) + '%';
+
+  document.getElementById('todayF').textContent = totalF;
+  document.getElementById('goalFDisplay').textContent = goals.fat;
+  document.getElementById('fBar').style.width = pct(totalF / goals.fat) + '%';
+
+  document.getElementById('todayC').textContent = totalC;
+  document.getElementById('goalCDisplay').textContent = goals.carbs;
+  document.getElementById('cBar').style.width = pct(totalC / goals.carbs) + '%';
+}
+
+// ── FOOD SEARCH ───────────────────────────────────────────────────────
+
+function searchFoods(query) {
+  const el = document.getElementById('foodResults');
+  if (!query.trim()) { el.style.display = 'none'; return; }
+  const q = query.trim().toLowerCase();
+  const hits = FOOD_DB.filter(f => f.name.toLowerCase().includes(q)).slice(0, 8);
+  if (!hits.length) { el.style.display = 'none'; return; }
+  el.style.display = 'block';
+  el.innerHTML = hits.map(f =>
+    `<div class="food-result-item" onclick="selectFood(${FOOD_DB.indexOf(f)})">
+      <div>
+        <div class="fr-name">${esc(f.name)}</div>
+        <div class="fr-macros">P:${f.p}g F:${f.f}g C:${f.c}g</div>
+      </div>
+      <div style="font-size:0.82rem;font-weight:700;color:#1d976c">${f.cal}kcal</div>
+    </div>`
+  ).join('');
+}
+
+function selectFood(idx) {
+  const f = FOOD_DB[idx];
+  document.getElementById('mealNameInput').value    = f.name;
+  document.getElementById('mealCalInput').value     = f.cal;
+  document.getElementById('mealProteinInput').value = f.p;
+  document.getElementById('mealFatInput').value     = f.f;
+  document.getElementById('mealCarbsInput').value   = f.c;
+  document.getElementById('foodResults').style.display = 'none';
+  document.getElementById('foodSearchInput').value  = '';
+}
+
 // ── PRESET CALORIE LOOKUP (partial match) ────────────────────────────
 
 function findCalFromPresets(name, type) {
@@ -1360,6 +1747,7 @@ let previewData       = null;
 setDateBar();
 updateStats();
 renderWeekGrid();
+updateNutritionPanel();
 
 function setDateBar() {
   const d    = new Date();
@@ -1537,8 +1925,11 @@ function openModal(dateStr, type) {
   ).join('');
 
   const existing = getMeal(dateStr, type);
-  document.getElementById('mealNameInput').value = existing ? existing.name : '';
-  document.getElementById('mealCalInput').value  = existing && existing.cal ? existing.cal : '';
+  document.getElementById('mealNameInput').value    = existing ? existing.name    : '';
+  document.getElementById('mealCalInput').value     = existing?.cal     || '';
+  document.getElementById('mealProteinInput').value = existing?.protein || '';
+  document.getElementById('mealFatInput').value     = existing?.fat     || '';
+  document.getElementById('mealCarbsInput').value   = existing?.carbs   || '';
 
   document.getElementById('modalOverlay').classList.add('open');
   setTimeout(() => document.getElementById('mealNameInput').focus(), 50);
@@ -1555,6 +1946,8 @@ function selectPreset(idx) {
 function closeModal() {
   document.getElementById('modalOverlay').classList.remove('open');
   document.getElementById('aiCalNote').style.display = 'none';
+  document.getElementById('foodResults').style.display = 'none';
+  document.getElementById('foodSearchInput').value = '';
   modalState = null;
 }
 function overlayClick(e) {
@@ -1565,14 +1958,16 @@ function saveMeal() {
   if (!modalState) return;
   const name = document.getElementById('mealNameInput').value.trim();
   if (!name) { closeModal(); return; }
-  let cal = parseInt(document.getElementById('mealCalInput').value) || null;
-  if (!cal) {
-    cal = findCalFromPresets(name, modalState.type);
-  }
-  setMeal(modalState.dateStr, modalState.type, { name, cal });
+  let cal     = parseInt(document.getElementById('mealCalInput').value)     || null;
+  let protein = parseFloat(document.getElementById('mealProteinInput').value) || null;
+  let fat     = parseFloat(document.getElementById('mealFatInput').value)     || null;
+  let carbs   = parseFloat(document.getElementById('mealCarbsInput').value)   || null;
+  if (!cal) cal = findCalFromPresets(name, modalState.type);
+  setMeal(modalState.dateStr, modalState.type, { name, cal, protein, fat, carbs });
   closeModal();
   renderWeekGrid();
   updateStats();
+  updateNutritionPanel();
 }
 
 function clearMeal() {

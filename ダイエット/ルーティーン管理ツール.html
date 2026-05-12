@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ルーティーン管理ツール</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', 'Hiragino Sans', 'Yu Gothic UI', sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 20px;
+      padding: 36px 32px;
+      width: 100%;
+      max-width: 520px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 1.5rem;
+      color: #4a3f8f;
+      margin-bottom: 4px;
+    }
+    .subtitle {
+      text-align: center;
+      color: #888;
+      font-size: 0.82rem;
+      margin-bottom: 20px;
+    }
+
+    .date-bar {
+      text-align: center;
+      font-size: 0.85rem;
+      color: #555;
+      margin-bottom: 20px;
+      padding: 8px 14px;
+      background: #f7f7fb;
+      border-radius: 10px;
+      font-weight: 600;
+    }
+
+    /* streak */
+    .streak-row {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .streak-box {
+      flex: 1;
+      background: #f7f7fb;
+      border-radius: 12px;
+      padding: 12px;
+      text-align: center;
+    }
+    .streak-box .s-label { font-size: 0.72rem; color: #999; margin-bottom: 4px; }
+    .streak-box .s-value { font-size: 1.4rem; font-weight: 800; color: #4a3f8f; }
+    .streak-box .s-unit  { font-size: 0.7rem; color: #bbb; }
+
+    /* nav tabs */
+    .tabs {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 22px;
+    }
+    .tab-btn {
+      flex: 1;
+      padding: 10px 4px;
+      border: 2px solid #e0e0e0;
+      border-radius: 12px;
+      background: #f8f8f8;
+      font-size: 0.82rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all .2s;
+      color: #888;
+    }
+    .tab-btn.active-morning { border-color: #f59e0b; background: #fffbeb; color: #b45309; }
+    .tab-btn.active-night   { border-color: #4a3f8f; background: #eef2ff; color: #4a3f8f; }
+    .tab-btn.active-calendar{ border-color: #10b981; background: #ecfdf5; color: #065f46; }
+
+    /* progress */
+    .progress-wrap { margin-bottom: 20px; }
+    .progress-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .progress-label { font-size: 0.82rem; color: #666; font-weight: 600; }
+    .progress-pct   { font-size: 1rem; font-weight: 800; color: #4a3f8f; }
+    .progress-bar-bg {
+      height: 10px;
+      background: #eee;
+      border-radius: 5px;
+      overflow: hidden;
+    }
+    .progress-bar-fill {
+      height: 100%;
+      border-radius: 5px;
+      background: linear-gradient(to right, #667eea, #764ba2);
+      transition: width .4s cubic-bezier(.4,0,.2,1);
+    }
+    .progress-bar-fill.morning { background: linear-gradient(to right, #f59e0b, #ef4444); }
+
+    /* routine list */
+    .routine-list { display: flex; flex-direction: column; gap: 10px; }
+
+    .routine-item {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 14px 16px;
+      border-radius: 14px;
+      border: 2px solid #eee;
+      background: #fafafa;
+      cursor: pointer;
+      transition: all .2s;
+      user-select: none;
+    }
+    .routine-item:hover { border-color: #c4b8f0; background: #f5f3ff; }
+    .routine-item.done         { border-color: #a7f3d0; background: #ecfdf5; opacity: .85; }
+    .routine-item.done-morning { border-color: #fde68a; background: #fffbeb; opacity: .85; }
+
+    .check-circle {
+      width: 26px; height: 26px;
+      border-radius: 50%;
+      border: 2.5px solid #ccc;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all .2s;
+      font-size: 0.9rem;
+    }
+    .done .check-circle         { border-color: #10b981; background: #10b981; color: #fff; }
+    .done-morning .check-circle { border-color: #f59e0b; background: #f59e0b; color: #fff; }
+
+    .item-body { flex: 1; }
+    .item-time  { font-size: 0.75rem; font-weight: 700; color: #9ca3af; margin-bottom: 2px; }
+    .item-name  { font-size: 0.95rem; font-weight: 600; color: #333; line-height: 1.3; }
+    .item-duration { font-size: 0.75rem; color: #bbb; flex-shrink: 0; }
+
+    .done .item-time,         .done-morning .item-time  { color: #6ee7b7; }
+    .done-morning .item-time  { color: #fcd34d; }
+    .done .item-name,         .done-morning .item-name  { text-decoration: line-through; color: #9ca3af; }
+
+    /* complete banner */
+    .complete-banner {
+      display: none;
+      margin-top: 18px;
+      padding: 16px;
+      border-radius: 14px;
+      text-align: center;
+      background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+      border: 2px solid #6ee7b7;
+      color: #065f46;
+      font-weight: 700;
+      font-size: 1rem;
+      animation: popIn .4s cubic-bezier(.4,0,.2,1);
+    }
+    .complete-banner.morning { background: linear-gradient(135deg, #fef3c7, #fde68a); border-color: #fbbf24; color: #78350f; }
+    .complete-banner.show { display: block; }
+
+    @keyframes popIn {
+      from { transform: scale(.9); opacity: 0; }
+      to   { transform: scale(1);  opacity: 1; }
+    }
+
+    /* ── CALENDAR ── */
+    #panel-calendar { display: none; }
+
+    .cal-nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+    .cal-nav button {
+      background: #f7f7fb;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      padding: 6px 12px;
+      cursor: pointer;
+      font-size: 1rem;
+      color: #555;
+      transition: all .15s;
+    }
+    .cal-nav button:hover { border-color: #aaa; }
+    .cal-title { font-size: 1rem; font-weight: 700; color: #4a3f8f; }
+
+    /* legend */
+    .cal-legend {
+      display: flex;
+      gap: 14px;
+      justify-content: center;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 0.75rem;
+      color: #555;
+    }
+    .legend-dot {
+      width: 12px; height: 12px;
+      border-radius: 3px;
+    }
+
+    .cal-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 4px;
+    }
+    .cal-header-cell {
+      text-align: center;
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: #aaa;
+      padding: 4px 0;
+    }
+    .cal-header-cell:first-child { color: #ef4444; }
+    .cal-header-cell:last-child  { color: #3b82f6; }
+
+    .cal-cell {
+      border-radius: 8px;
+      padding: 5px 3px;
+      min-height: 56px;
+      background: #f9fafb;
+      border: 1.5px solid #eee;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      transition: background .2s;
+    }
+    .cal-cell.empty { background: transparent; border-color: transparent; }
+    .cal-cell.today { border-color: #667eea; border-width: 2px; background: #f0edff; }
+
+    .cal-day-num {
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: #555;
+      line-height: 1;
+    }
+    .cal-cell.today .cal-day-num { color: #4a3f8f; }
+    .cal-cell:first-child .cal-day-num { color: #ef4444; }
+
+    .cal-badges {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      width: 100%;
+    }
+    .cal-badge {
+      font-size: 0.62rem;
+      font-weight: 700;
+      text-align: center;
+      border-radius: 3px;
+      padding: 1px 2px;
+      line-height: 1.4;
+    }
+    .badge-full-morning  { background: #fde68a; color: #92400e; }
+    .badge-half-morning  { background: #fef3c7; color: #b45309; }
+    .badge-full-night    { background: #a7f3d0; color: #065f46; }
+    .badge-half-night    { background: #d1fae5; color: #047857; }
+    .badge-none          { background: #f3f4f6; color: #ccc; }
+
+    /* monthly summary */
+    .cal-summary {
+      margin-top: 18px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    .cal-summary-box {
+      background: #f7f7fb;
+      border-radius: 12px;
+      padding: 14px;
+      text-align: center;
+    }
+    .cal-summary-box .cs-label { font-size: 0.72rem; color: #999; margin-bottom: 6px; }
+    .cs-ring {
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: #4a3f8f;
+    }
+    .cs-sub { font-size: 0.7rem; color: #bbb; }
+
+    /* reset */
+    .reset-btn {
+      display: block;
+      width: 100%;
+      margin-top: 16px;
+      padding: 10px;
+      background: transparent;
+      border: 2px solid #ddd;
+      border-radius: 10px;
+      color: #888;
+      font-size: 0.88rem;
+      cursor: pointer;
+      transition: all .2s;
+    }
+    .reset-btn:hover { border-color: #aaa; color: #555; }
+  </style>
+</head>
+<body>
+<div class="card">
+  <h1>ルーティーン管理ツール</h1>
+  <p class="subtitle">毎日のルーティーンをチェックして習慣を作ろう</p>
+
+  <div class="date-bar" id="dateBar"></div>
+
+  <div class="streak-row">
+    <div class="streak-box">
+      <div class="s-label">朝ルーティーン連続達成</div>
+      <div class="s-value" id="morningStreak">0</div>
+      <div class="s-unit">日</div>
+    </div>
+    <div class="streak-box">
+      <div class="s-label">夜ルーティーン連続達成</div>
+      <div class="s-value" id="nightStreak">0</div>
+      <div class="s-unit">日</div>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab-btn active-morning" id="tab-morning"  onclick="switchTab('morning')">☀️ 朝</button>
+    <button class="tab-btn"               id="tab-night"    onclick="switchTab('night')">🌙 夜</button>
+    <button class="tab-btn"               id="tab-calendar" onclick="switchTab('calendar')">📅 月間記録</button>
+  </div>
+
+  <!-- progress (hidden on calendar tab) -->
+  <div class="progress-wrap" id="progressWrap">
+    <div class="progress-header">
+      <span class="progress-label" id="progressLabel">進捗</span>
+      <span class="progress-pct"   id="progressPct">0%</span>
+    </div>
+    <div class="progress-bar-bg">
+      <div class="progress-bar-fill morning" id="progressFill" style="width:0%"></div>
+    </div>
+  </div>
+
+  <!-- morning -->
+  <div id="panel-morning">
+    <div class="routine-list" id="list-morning"></div>
+    <div class="complete-banner morning" id="banner-morning">
+      ☀️ 朝のルーティーン完了！素晴らしい一日のスタートです！
+    </div>
+  </div>
+
+  <!-- night -->
+  <div id="panel-night" style="display:none">
+    <div class="routine-list" id="list-night"></div>
+    <div class="complete-banner" id="banner-night">
+      🌙 夜のルーティーン完了！ゆっくり休んでね、おやすみなさい！
+    </div>
+  </div>
+
+  <!-- calendar -->
+  <div id="panel-calendar">
+    <div class="cal-nav">
+      <button onclick="calMove(-1)">◀</button>
+      <span class="cal-title" id="calTitle"></span>
+      <button onclick="calMove(+1)">▶</button>
+    </div>
+
+    <div class="cal-legend">
+      <div class="legend-item"><div class="legend-dot badge-full-morning"></div>朝 100%</div>
+      <div class="legend-item"><div class="legend-dot badge-half-morning"></div>朝 途中</div>
+      <div class="legend-item"><div class="legend-dot badge-full-night"></div>夜 100%</div>
+      <div class="legend-item"><div class="legend-dot badge-half-night"></div>夜 途中</div>
+    </div>
+
+    <div class="cal-grid" id="calGrid"></div>
+
+    <div class="cal-summary" id="calSummary"></div>
+  </div>
+
+  <button class="reset-btn" id="resetBtn" onclick="resetToday()">今日のチェックをリセット</button>
+</div>
+
+<script>
+  const MORNING_ITEMS = [
+    { time: '6:30',  name: '起床・水を一杯飲む',                    duration: '5分'  },
+    { time: '6:35',  name: 'ストレッチ・軽い体操',                  duration: '10分' },
+    { time: '6:45',  name: '洗顔・歯磨き・身支度',                  duration: '15分' },
+    { time: '7:00',  name: '朝食',                                  duration: '20分' },
+    { time: '7:20',  name: '瞑想 / 日記 / 今日のタスク確認',        duration: '10分' },
+    { time: '7:30',  name: '自由時間（読書・ニュース・趣味）',       duration: '30分' },
+    { time: '8:00',  name: '外出 / 仕事開始',                       duration: '—'    },
+  ];
+
+  const NIGHT_ITEMS = [
+    { time: '21:00', name: '夕食終了・食器片付け',                   duration: '—'    },
+    { time: '21:15', name: '入浴（湯船に浸かる）',                   duration: '20分' },
+    { time: '21:35', name: 'スキンケア・歯磨き',                     duration: '10分' },
+    { time: '21:45', name: '翌日の準備（服・持ち物・タスク確認）',   duration: '15分' },
+    { time: '22:00', name: 'リラックスタイム（読書・ストレッチ・音楽）', duration: '45分' },
+    { time: '22:45', name: 'スマホ・PC終了 / 照明を暗くする',        duration: '—'    },
+    { time: '22:50', name: '日記・感謝ノート（3行でOK）',            duration: '10分' },
+    { time: '23:00', name: '就寝',                                   duration: '—'    },
+  ];
+
+  let currentTab = 'morning';
+  let calYear, calMonth;
+
+  const todayKey  = () => new Date().toISOString().slice(0, 10);
+  const dateKey   = (y, m, d) => `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+
+  function loadState(key) {
+    const raw = localStorage.getItem('routine_' + key);
+    return raw ? JSON.parse(raw) : { morning: [], night: [] };
+  }
+  function saveState(key, state) {
+    localStorage.setItem('routine_' + key, JSON.stringify(state));
+  }
+  function loadStreaks() {
+    const raw = localStorage.getItem('routine_streaks');
+    return raw ? JSON.parse(raw) : { morning: 0, night: 0, lastMorning: '', lastNight: '' };
+  }
+  function saveStreaks(s) {
+    localStorage.setItem('routine_streaks', JSON.stringify(s));
+  }
+
+  function updateStreaks(type, allDone) {
+    if (!allDone) return;
+    const today = todayKey();
+    const s = loadStreaks();
+    const lastKey   = type === 'morning' ? 'lastMorning' : 'lastNight';
+    const streakKey = type;
+    if (s[lastKey] === today) return;
+    const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+    s[streakKey] = s[lastKey] === yesterday ? s[streakKey] + 1 : 1;
+    s[lastKey] = today;
+    saveStreaks(s);
+    renderStreaks();
+  }
+
+  function renderStreaks() {
+    const s = loadStreaks();
+    document.getElementById('morningStreak').textContent = s.morning;
+    document.getElementById('nightStreak').textContent   = s.night;
+  }
+
+  function buildList(type) {
+    const items   = type === 'morning' ? MORNING_ITEMS : NIGHT_ITEMS;
+    const state   = loadState(todayKey());
+    const checked = state[type];
+    const listEl  = document.getElementById('list-' + type);
+    listEl.innerHTML = '';
+
+    items.forEach((item, i) => {
+      const done      = checked.includes(i);
+      const doneClass = done ? (type === 'morning' ? 'done-morning' : 'done') : '';
+      const div       = document.createElement('div');
+      div.className   = 'routine-item ' + doneClass;
+      div.innerHTML   = `
+        <div class="check-circle">${done ? '✓' : ''}</div>
+        <div class="item-body">
+          <div class="item-time">${item.time}</div>
+          <div class="item-name">${item.name}</div>
+        </div>
+        <div class="item-duration">${item.duration}</div>
+      `;
+      div.addEventListener('click', () => toggle(type, i));
+      listEl.appendChild(div);
+    });
+
+    updateProgress(type);
+  }
+
+  function toggle(type, index) {
+    const state = loadState(todayKey());
+    const arr   = state[type];
+    const pos   = arr.indexOf(index);
+    if (pos >= 0) arr.splice(pos, 1); else arr.push(index);
+    saveState(todayKey(), state);
+    buildList(type);
+    const total  = (type === 'morning' ? MORNING_ITEMS : NIGHT_ITEMS).length;
+    updateStreaks(type, arr.length === total);
+  }
+
+  function updateProgress(type) {
+    const state = loadState(todayKey());
+    const total = (type === 'morning' ? MORNING_ITEMS : NIGHT_ITEMS).length;
+    const done  = state[type].length;
+    const pct   = Math.round(done / total * 100);
+
+    document.getElementById('progressPct').textContent   = pct + '%';
+    const fill = document.getElementById('progressFill');
+    fill.style.width  = pct + '%';
+    fill.className    = 'progress-bar-fill' + (type === 'morning' ? ' morning' : '');
+    document.getElementById('progressLabel').textContent =
+      type === 'morning' ? '☀️ 朝ルーティーン進捗' : '🌙 夜ルーティーン進捗';
+
+    const banner = document.getElementById('banner-' + type);
+    pct === 100 ? banner.classList.add('show') : banner.classList.remove('show');
+  }
+
+  /* ── CALENDAR ── */
+  function renderCalendar() {
+    const y = calYear, m = calMonth;
+    document.getElementById('calTitle').textContent = `${y}年 ${m + 1}月`;
+
+    const firstDay = new Date(y, m, 1).getDay();
+    const lastDate = new Date(y, m + 1, 0).getDate();
+    const todayStr = todayKey();
+    const today    = new Date();
+
+    const mTotal = MORNING_ITEMS.length;
+    const nTotal = NIGHT_ITEMS.length;
+
+    const DAY_HEADERS = ['日','月','火','水','木','金','土'];
+    let html = DAY_HEADERS.map(d => `<div class="cal-header-cell">${d}</div>`).join('');
+
+    for (let i = 0; i < firstDay; i++) html += '<div class="cal-cell empty"></div>';
+
+    let mDoneCount = 0, nDoneCount = 0, activeDays = 0;
+
+    for (let d = 1; d <= lastDate; d++) {
+      const key      = dateKey(y, m, d);
+      const isToday  = key === todayStr;
+      const isFuture = key > todayStr;
+      const state    = loadState(key);
+      const mPct     = state.morning.length / mTotal;
+      const nPct     = state.night.length   / nTotal;
+
+      if (!isFuture && (state.morning.length > 0 || state.night.length > 0)) activeDays++;
+      if (!isFuture && mPct === 1) mDoneCount++;
+      if (!isFuture && nPct === 1) nDoneCount++;
+
+      const mBadge = isFuture ? '' : mPct === 0 ? ''
+        : mPct === 1 ? `<div class="cal-badge badge-full-morning">朝 ✓</div>`
+                     : `<div class="cal-badge badge-half-morning">朝 ${Math.round(mPct*100)}%</div>`;
+
+      const nBadge = isFuture ? '' : nPct === 0 ? ''
+        : nPct === 1 ? `<div class="cal-badge badge-full-night">夜 ✓</div>`
+                     : `<div class="cal-badge badge-half-night">夜 ${Math.round(nPct*100)}%</div>`;
+
+      html += `
+        <div class="cal-cell ${isToday ? 'today' : ''}">
+          <div class="cal-day-num">${d}</div>
+          <div class="cal-badges">${mBadge}${nBadge}</div>
+        </div>`;
+    }
+
+    document.getElementById('calGrid').innerHTML = html;
+
+    /* monthly summary */
+    const passedDays = y === today.getFullYear() && m === today.getMonth()
+      ? today.getDate()
+      : (new Date(y, m + 1, 0)).getDate();
+
+    const mRate = passedDays > 0 ? Math.round(mDoneCount / passedDays * 100) : 0;
+    const nRate = passedDays > 0 ? Math.round(nDoneCount / passedDays * 100) : 0;
+
+    document.getElementById('calSummary').innerHTML = `
+      <div class="cal-summary-box">
+        <div class="cs-label">☀️ 朝 完全達成日</div>
+        <div class="cs-ring">${mDoneCount}<span style="font-size:.9rem;font-weight:400;color:#aaa"> / ${passedDays}日</span></div>
+        <div class="cs-sub">達成率 ${mRate}%</div>
+      </div>
+      <div class="cal-summary-box">
+        <div class="cs-label">🌙 夜 完全達成日</div>
+        <div class="cs-ring">${nDoneCount}<span style="font-size:.9rem;font-weight:400;color:#aaa"> / ${passedDays}日</span></div>
+        <div class="cs-sub">達成率 ${nRate}%</div>
+      </div>
+    `;
+  }
+
+  function calMove(delta) {
+    calMonth += delta;
+    if (calMonth < 0)  { calMonth = 11; calYear--; }
+    if (calMonth > 11) { calMonth = 0;  calYear++; }
+    renderCalendar();
+  }
+
+  /* ── TAB SWITCH ── */
+  function switchTab(tab) {
+    currentTab = tab;
+    ['morning','night','calendar'].forEach(t => {
+      document.getElementById('panel-' + t).style.display = t === tab ? 'block' : 'none';
+    });
+    document.getElementById('tab-morning').className  = 'tab-btn' + (tab === 'morning'  ? ' active-morning'  : '');
+    document.getElementById('tab-night').className    = 'tab-btn' + (tab === 'night'    ? ' active-night'    : '');
+    document.getElementById('tab-calendar').className = 'tab-btn' + (tab === 'calendar' ? ' active-calendar' : '');
+
+    document.getElementById('progressWrap').style.display = tab === 'calendar' ? 'none' : 'block';
+    document.getElementById('resetBtn').style.display     = tab === 'calendar' ? 'none' : 'block';
+
+    if (tab === 'calendar') renderCalendar();
+    else buildList(tab);
+  }
+
+  function resetToday() {
+    if (!confirm('今日のチェックをすべてリセットしますか？')) return;
+    localStorage.removeItem('routine_' + todayKey());
+    buildList(currentTab);
+  }
+
+  function setDateBar() {
+    const d    = new Date();
+    const days = ['日','月','火','水','木','金','土'];
+    document.getElementById('dateBar').textContent =
+      `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日（${days[d.getDay()]}）`;
+  }
+
+  /* init */
+  const _now = new Date();
+  calYear  = _now.getFullYear();
+  calMonth = _now.getMonth();
+  setDateBar();
+  renderStreaks();
+  buildList('morning');
+</script>
+</body>
+</html>
